@@ -5,6 +5,109 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>GENZ — Presale</title>
   <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
+
+  <!-- favicon: встроенный SVG (логотип GZ) -->
+
+<!-- вставь где удобно (в конце body или в head) -->
+<script>
+/**
+ * Сделает круглый favicon из твоего изображения.
+ * - src: путь к PNG/JPG (лучше same-origin, иначе canvas будет "tainted")
+ * - size: итоговый размер фавикона (px)
+ * - border: видимая рамка (px)
+ * - borderColor: цвет рамки
+ */
+(function makeRoundedFavicon(src = './img/IMG_0605.PNG', size = 128, border = 4, borderColor = '#88A7C8') {
+  // helper: установить/обновить link rel="icon"
+  function setFaviconDataURL(dataUrl) {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    link.type = 'image/png';
+    link.href = dataUrl;
+  }
+
+  const img = new Image();
+  // если картинка на том же домене — можно убрать crossOrigin; иначе попробуй 'anonymous' и
+  // чтобы сервер отдавал CORS-заголовок Access-Control-Allow-Origin: *
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // очистить
+    ctx.clearRect(0, 0, size, size);
+
+    // создать круговую маску
+    const cx = size / 2;
+    const cy = size / 2;
+    const radius = (size / 2) - border;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    // отрисовать картинку, масштабируя чтобы заполнить квадрат
+    // сохраним aspect-fill: центрируем и масштабируем
+    const arImg = img.width / img.height;
+    const arCan = 1; // square
+    let dw = size, dh = size, dx = 0, dy = 0;
+    if (arImg > arCan) {
+      // изображение шире → обрезать слева/справа
+      dh = size;
+      dw = Math.round(size * arImg);
+      dx = Math.round((size - dw) / 2);
+    } else {
+      // изображение выше → обрезать сверху/снизу
+      dw = size;
+      dh = Math.round(size / arImg);
+      dy = Math.round((size - dh) / 2);
+    }
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+
+    // рамка (тонкая)
+    if (border > 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2, true);
+      ctx.lineWidth = border * 2; // делаем видимую рамку
+      ctx.strokeStyle = borderColor;
+      ctx.stroke();
+    }
+
+    // получить dataURL и установить как favicon
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      setFaviconDataURL(dataUrl);
+      // подстраховка: добавить также shortcut icon с параметром версии, чтобы избежать кэша
+      let sc = document.querySelector("link[rel='shortcut icon']");
+      if (!sc) { sc = document.createElement('link'); sc.rel = 'shortcut icon'; document.head.appendChild(sc); }
+      sc.href = dataUrl;
+    } catch (err) {
+      // если canvas "tainted" (картинка с другого домена без CORS), fallback — установить оригинал как favicon
+      console.warn('Could not create rounded favicon (canvas may be tainted). Falling back to original image.', err);
+      setFaviconDataURL(src + (src.indexOf('?') === -1 ? '?v=1' : '&v=1'));
+    }
+  };
+
+  img.onerror = (e) => {
+    console.warn('Failed to load favicon source:', src, e);
+  };
+
+  // старт загрузки
+  img.src = src;
+})();
+</script>
+
+
+  
   <style>
     :root{
       --bg1:#0f1724; --bg2:#06060a;
@@ -192,6 +295,56 @@
       .cd{min-width:64px;padding:8px}
     }
   </style>
+
+  <!-- Web3Modal v2 (wagmi) example — taken from the site you provided.
+       This only initializes the modal; it does NOT modify UI elements.
+       It will call modal.open() when an element with id="claimBtn" is clicked
+       (just like in the example). -->
+  <script type="module">
+    import { createWeb3Modal, defaultWagmiConfig } from "https://esm.sh/@web3modal/wagmi";
+    import { polygon } from "https://esm.sh/viem/chains";
+
+    const projectId = "56edaed968d799280ffd685113d7f126";
+    const chains = [polygon];
+    const config = defaultWagmiConfig({ chains, projectId });
+
+    const modal = createWeb3Modal({
+      wagmiConfig: config,
+      projectId,
+      chains,
+      themeMode: "dark",
+      themeVariables: {
+        "--w3m-accent-color": "#ffd60a",
+        "--w3m-background-color": "#0b1220"
+      }
+    });
+
+    // Attach to existing UI button if present (do not add UI)
+    window.addEventListener('load', () => {
+      // try common ids used in examples; if none present - nothing visible changes
+      const possibleIds = ['claimBtn', 'connectBtn', 'buy', 'subBtn', 'subBtn'];
+      let btn = null;
+      for(const id of possibleIds){
+        btn = document.getElementById(id);
+        if(btn) break;
+      }
+      // In your original example it was claimBtn. Only enable/attach if it exists.
+      if(btn){
+        try{ btn.disabled = false; }catch(e){}
+        btn.addEventListener('click', async (ev) => {
+          ev.preventDefault();
+          try{
+            await modal.open();
+          }catch(e){
+            console.error('modal.open error', e);
+          }
+        });
+      }
+    });
+
+    // Expose modal on window in case you want to open programmatically from console
+    window.__GENZ_WEB3_MODAL__ = modal;
+  </script>
 </head>
 <body>
   <div class="bg" aria-hidden="true"></div>
@@ -255,27 +408,28 @@
             <div class="tiers" style="margin-top:12px">
               <div class="tier">
                 <div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div>
-                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn" id="seedBuy">Buy (demo)</button></div>
               </div>
 
               <div class="tier">
                 <div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div>
-                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn" id="earlyBuy">Buy (demo)</button></div>
               </div>
 
               <div class="tier">
                 <div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div>
-                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn" id="publicBuy">Buy (demo)</button></div>
               </div>
             </div>
 
-            <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 (ethers.js / web3modal) and verify the contract address on the explorer.</p>
+            <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 and call your presale contract's buy function.</p>
+            <div id="walletNotice"></div>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px" id="tokenomics">
           <h3>Tokenomics</h3>
-          <p class="muted small">Transparency > hype. Example allocation below.</p>
+          <p class="muted small">Transparency &gt; hype. Example allocation below.</p>
           <table>
             <tr><td>Total Supply</td><td class="right">1,000,000,000</td></tr>
             <tr><td>Presale</td><td class="right">20%</td></tr>
@@ -303,7 +457,7 @@
           </details>
           <details style="margin-top:8px">
             <summary>How do I participate?</summary>
-            <div class="muted small" style="margin-top:8px">You need a wallet (MetaMask). Integration is done via ethers.js / Web3 modal. Never share private keys.</div>
+            <div class="muted small" style="margin-top:8px">You need a wallet (MetaMask). Integration is done via Web3Modal v2 / wagmi. Never share private keys.</div>
           </details>
         </div>
       </section>
@@ -321,7 +475,7 @@
           <div style="margin-top:12px">
             <h4>Quick facts</h4>
             <div class="muted small">Contract: <span id="contractAddr">0xPUT_CONTRACT_ADDRESS</span></div>
-            <div class="muted small" style="margin-top:6px">Network: Ethereum (change in JS)</div>
+            <div class="muted small" style="margin-top:6px">Network: Polygon (change in JS)</div>
           </div>
         </div>
 
@@ -338,7 +492,7 @@
   </div>
 
   <script>
-    // ===== CONFIG: replace these values for your project =====
+    // ===== CONFIG: replace these values for your project if needed =====
     const CONFIG = {
       PRESALE_START: '2025-10-01T12:00:00Z', // ISO
       PRESALE_END: '2025-10-15T12:00:00Z',
@@ -346,65 +500,7 @@
       RAISED_USD: 7800,
       CONTRACT_ADDR: '0xPUT_CONTRACT_ADDRESS',
     };
-
-    // init ui
+    // ================= existing UI code: countdown, subscribe etc. ===================
     document.getElementById('hardcap').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
     document.getElementById('raised').textContent = '$' + CONFIG.RAISED_USD.toLocaleString();
-    document.getElementById('target').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
-    const pct = Math.min(100, Math.round((CONFIG.RAISED_USD / CONFIG.PRESALE_TARGET_USD) * 100));
-    document.getElementById('barInner').style.width = pct + '%';
-    document.getElementById('pct').textContent = pct + '%';
-    document.getElementById('contractAddr').textContent = CONFIG.CONTRACT_ADDR;
-
-    // Countdown
-    function timeLeft(to) {
-      const diff = Math.max(0, new Date(to) - new Date());
-      const days = Math.floor(diff / 86400000);
-      const hrs = Math.floor((diff % 86400000) / 3600000);
-      const mins = Math.floor((diff % 3600000) / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
-      return {days,hrs,mins,secs,remaining:diff};
-    }
-    function renderCountdown(){
-      const start = new Date(CONFIG.PRESALE_START);
-      const end = new Date(CONFIG.PRESALE_END);
-      const now = new Date();
-      const container = document.getElementById('countdown');
-      container.innerHTML = '';
-      if(now < start){
-        const t = timeLeft(start);
-        container.appendChild(card('Until start', t));
-      } else if(now >= start && now <= end){
-        const t = timeLeft(end);
-        container.appendChild(card('Until end', t));
-      } else {
-        const el = document.createElement('div'); el.className='cd'; el.textContent='Presale finished'; container.appendChild(el);
-      }
-    }
-    function card(label, t){
-      const el = document.createElement('div'); el.className='cd';
-      el.innerHTML = '<small>'+label+'</small><b>'+t.days+'d '+String(t.hrs).padStart(2,'0')+':'+String(t.mins).padStart(2,'0')+':'+String(t.secs).padStart(2,'0')+'</b>';
-      return el;
-    }
-    renderCountdown(); setInterval(renderCountdown,1000);
-
-    // Subscribe demo
-    document.getElementById('subscribeForm').addEventListener('submit', function(e){
-      e.preventDefault(); const email = document.getElementById('email').value.trim();
-      const msg = document.getElementById('subMsg');
-      if(!/^\S+@\S+\.\S+$/.test(email)){ msg.textContent = 'Please enter a valid email.'; return; }
-      msg.textContent = 'Thanks — email added to local list (demo).';
-      document.getElementById('email').value='';
-    });
-
-    // Demo buy handler (UI only)
-    function demoBuy(tier){
-      alert('DEMO: purchase function not implemented. Integrate Web3 for real transactions.');
-    }
-    window.demoBuy = demoBuy;
-
-    // Console safety note
-    console.warn('Security: do not deploy this template to production without auditing the contract, backend, and Web3 integrations.');
-  </script>
-</body>
-</html>
+    document.getElementById('target').textContent
