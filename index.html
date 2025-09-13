@@ -7,33 +7,30 @@
   <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
   <meta name="theme-color" content="#0b1220">
 
-  <!-- Rounded favicon builder (keeps your IMG_0605.PNG as circular favicon) -->
+  <!-- Rounded favicon builder (uses ./img/IMG_0605.PNG) -->
   <script>
-  (function makeRoundedFavicon(src = './img/IMG_0605.PNG', size = 128, border = 4, borderColor = '#88A7C8') {
+  (function makeRoundedFavicon(src = './img/IMG_0605.PNG', size = 128, border = 3, borderColor = '#88A7C8') {
     function setFaviconDataURL(dataUrl) {
       let link = document.querySelector("link[rel~='icon']");
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.type = 'image/png';
-      link.href = dataUrl;
+      if(!link){ link = document.createElement('link'); link.rel='icon'; document.head.appendChild(link); }
+      link.type = 'image/png'; link.href = dataUrl;
       let sc = document.querySelector("link[rel='shortcut icon']");
-      if(!sc){ sc = document.createElement('link'); sc.rel = 'shortcut icon'; document.head.appendChild(sc); }
+      if(!sc){ sc = document.createElement('link'); sc.rel='shortcut icon'; document.head.appendChild(sc); }
       sc.href = dataUrl;
     }
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0,0,size,size);
+      const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,size,size);
       const cx = size/2, cy = size/2, radius = (size/2)-border;
       ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.closePath(); ctx.clip();
-      const arImg = img.width / img.height;
+      const ar = img.width / img.height;
       let dw=size, dh=size, dx=0, dy=0;
-      if(arImg>1){ dh=size; dw=Math.round(size*arImg); dx = Math.round((size-dw)/2); }
-      else { dw=size; dh = Math.round(size / arImg); dy = Math.round((size-dh)/2); }
+      if(ar>1){ dh=size; dw=Math.round(size*ar); dx=Math.round((size-dw)/2); } else { dw=size; dh=Math.round(size/ar); dy=Math.round((size-dh)/2); }
       ctx.drawImage(img, dx, dy, dw, dh); ctx.restore();
       if(border>0){ ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.lineWidth = border*2; ctx.strokeStyle = borderColor; ctx.stroke(); }
-      try { setFaviconDataURL(canvas.toDataURL('image/png')); } catch(e){ console.warn('favicon canvas failed', e); setFaviconDataURL(src + (src.indexOf('?')===-1? '?v=1':'&v=1')); }
+      try{ setFaviconDataURL(canvas.toDataURL('image/png')); } catch(e){ console.warn('favicon canvas failed', e); setFaviconDataURL(src); }
     };
     img.onerror = () => { setFaviconDataURL(src); };
     img.src = src;
@@ -43,173 +40,167 @@
   <style>
     :root{
       --bg1:#0f1724; --bg2:#06060a;
-      --muted:rgba(255,255,255,0.85);
+      --muted:rgba(255,255,255,0.88);
       --muted-weak:rgba(255,255,255,0.66);
-      --card-bg: rgba(6,10,20,0.75);
+      --card-bg: rgba(6,10,20,0.62);
       --card-border: rgba(255,255,255,0.04);
       --yellow-1:#ffd60a; --yellow-2:#ffb300;
       --maxw:1100px;
-      --gap:16px;
     }
-
-    /* base reset */
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color: var(--muted);
+      margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+      color:#e6eef8;background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased;
       -webkit-font-smoothing:antialiased;
-      background-color:var(--bg1);
-      -webkit-tap-highlight-color: transparent;
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
-      -moz-osx-font-smoothing:grayscale;
     }
+    .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{display:flex;gap:14px;align-items:center;min-width:0}
+    nav{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    nav a{color:var(--muted-weak);text-decoration:none;font-size:14px;padding:6px 8px;border-radius:8px}
+    nav a:hover{background:rgba(255,255,255,0.03);color:#fff}
 
-    /* background layer (keeps image but darkens for legibility) */
-    .bg {
-      position:fixed; inset:0; z-index:0;
-      background-image: url('./img/IMG_0606.PNG');
-      background-size: cover; background-position:center; background-repeat:no-repeat;
-      filter: saturate(0.9) contrast(0.9);
+    .logo{
+      width:86px;height:86px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:2px solid rgba(255,255,255,0.06);box-shadow:0 10px 30px rgba(0,0,0,0.6);
+      flex-shrink:0;
     }
-    .bg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,6,23,0.78), rgba(2,8,25,0.88)); }
+    .logo img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
 
-    .wrap{
-      max-width:var(--maxw); margin:20px auto; padding:20px; position:relative; z-index:2;
-    }
+    .btn{background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));padding:10px 14px;border-radius:12px;color:#061026;font-weight:800;border:0;cursor:pointer}
+    .btn:hover{transform:translateY(-2px)}
 
-    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-    .brand{ display:flex; gap:12px; align-items:center; min-width:0; }
-    .logo{ width:72px; height:72px; border-radius:50%; overflow:hidden; flex:0 0 auto; border:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow: 0 8px 22px rgba(0,0,0,0.6); }
-    .logo img{ width:100%; height:100%; object-fit:cover; display:block; user-select:none; -webkit-user-drag:none; }
+    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:20px}
+    @media(min-width:960px){.grid{grid-template-columns:1fr 420px}}
 
-    .brand .title{ font-weight:800; font-size:16px; color:#fff; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .brand .sub{ font-size:13px; color:var(--muted-weak); margin-top:2px; }
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:14px}
+    h1{margin:0;font-size:34px}
+    p.lead{color:var(--muted-weak);margin-top:8px}
 
-    /* nav: horizontal scroll on small screens (no hamburger) */
-    nav{ display:flex; gap:10px; align-items:center; white-space:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:4px 0; }
-    nav a{ color:var(--muted-weak); text-decoration:none; font-size:14px; padding:8px 10px; border-radius:10px; flex:0 0 auto; display:inline-block; }
-    nav a:focus, nav a:hover{ background: rgba(255,255,255,0.03); color:#fff; transform:translateY(-2px); }
+    .stats{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+    .stat{background:var(--card-bg);padding:10px;border-radius:10px;flex:1;min-width:120px}
+    .stat small{color:var(--muted-weak);display:block}
+    .stat strong{display:block;font-size:18px}
 
-    /* buttons */
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      background: linear-gradient(135deg, var(--yellow-1), var(--yellow-2));
-      color:#071122; font-weight:800; padding:10px 16px; border-radius:12px; border:0; cursor:pointer; font-size:15px;
-      box-shadow: 0 6px 18px rgba(255,180,20,0.12), inset 0 -6px 18px rgba(255,160,0,0.04);
-    }
-    .btn:active{ transform: translateY(0); }
-    .btn:focus{ outline:3px solid rgba(255,214,10,0.12); outline-offset:2px; }
+    .progress{margin-top:14px}
+    .bar{height:12px;background:#061026;border-radius:999px;overflow:hidden}
+    .bar-inner{height:100%;width:0;background:linear-gradient(90deg,var(--yellow-1),var(--yellow-2));transition:width .9s ease}
+    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted-weak);margin-top:8px}
 
-    /* layout */
-    .grid{ display:grid; gap:18px; grid-template-columns: 1fr; align-items:start; }
-    @media(min-width:960px){ .grid{ grid-template-columns: 1fr 420px; } }
+    .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .cd{background:var(--card-bg);padding:10px 12px;border-radius:8px;text-align:center;min-width:76px}
+    .cd b{display:block;font-size:18px}
+    .tiers{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+    .tier{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#071122;border-radius:10px}
 
-    .card{
-      background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:16px; box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-      backdrop-filter: blur(6px);
-    }
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
 
-    h1{ margin:0 0 6px 0; font-size:28px; color:#fff; line-height:1.05; text-shadow:0 6px 24px rgba(0,0,0,0.6); }
-    p.lead{ color:var(--muted-weak); margin:0 0 12px 0; font-size:15px; }
+    footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
 
-    .stats{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-    .stat{ flex:1 1 120px; background: rgba(3,6,13,0.55); padding:10px; border-radius:10px; text-align:center; border:1px solid rgba(255,255,255,0.02); }
-    .stat small{ display:block; color:var(--muted-weak); font-size:13px; }
-    .stat strong{ display:block; font-size:18px; color:#fff; margin-top:6px; }
+    .muted{color:var(--muted-weak)}
+    .right{text-align:right}
 
-    .progress{ margin-top:12px; }
-    .bar{ height:14px; background: rgba(255,255,255,0.03); border-radius:999px; overflow:hidden; border:1px solid rgba(0,0,0,0.35); }
-    .bar-inner{ height:100%; width:0; background: linear-gradient(90deg, var(--yellow-1), var(--yellow-2)); transition: width .9s ease; box-shadow: inset 0 6px 14px rgba(255,180,20,0.08); }
-    .bar-row{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:13px; color:var(--muted-weak); }
+    .subscribe{display:flex;gap:8px;margin-top:10px}
+    .input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;flex:1}
+    .small{font-size:13px}
 
-    .countdown{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
-    .cd{ background: rgba(3,6,13,0.55); padding:10px 12px; border-radius:10px; min-width:88px; text-align:center; color:#fff; border:1px solid rgba(255,255,255,0.02); }
-    .cd small{ display:block; color:var(--muted-weak); font-size:12px; }
-    .cd b{ display:block; font-size:16px; }
+    details{background:#071224;padding:10px;border-radius:8px}
+    summary{cursor:pointer;font-weight:600}
 
-    .tiers{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
-    .tier{ display:flex; gap:12px; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background: rgba(3,6,13,0.48); border:1px solid rgba(255,255,255,0.02); }
-    .tier .right{ display:flex; gap:8px; align-items:center; }
-
-    table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:14px; color:var(--muted-weak); }
-    td,th{ padding:8px; border-bottom:1px dashed rgba(255,255,255,0.03); }
-
-    footer{ color:var(--muted-weak); font-size:13px; text-align:center; margin-top:18px; }
-
-    .subscribe{ display:flex; gap:8px; align-items:center; margin-top:10px; }
-    .input{ padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.25); color:#fff; flex:1; min-width:0; }
-
-    /* small utility */
-    .muted{ color:var(--muted-weak); }
-    .right{ text-align:right; }
-
-    /* mobile specific adjustments */
-    @media(max-width:720px){
-      .wrap{ padding:14px; margin:12px auto; }
-      header{ gap:10px; align-items:center; }
-      .logo{ width:56px; height:56px; }
-      .brand .title{ font-size:15px; }
-      nav{ gap:8px; padding:6px 0; }
-      nav a{ padding:8px 10px; font-size:14px; }
-      h1{ font-size:22px; }
-      .card{ padding:14px; border-radius:12px; }
-      .btn{ padding:12px 14px; width:100%; font-size:15px; border-radius:12px; }
-      .tier{ flex-direction:column; align-items:stretch; gap:8px; padding:12px; }
-      .tier .right{ justify-content:space-between; width:100%; }
-      .stats{ flex-direction:row; overflow-x:auto; gap:10px; padding-bottom:6px; }
-      .stat{ min-width:120px; flex:0 0 auto; }
-      .bar{ height:16px; }
-      .cd{ min-width:72px; padding:8px; }
-      .subscribe{ flex-direction:column; align-items:stretch; }
-      .input{ width:100%; }
-      .card + .card{ margin-top:12px; }
-    }
-
-    /* reduce motion */
-    @media (prefers-reduced-motion: reduce) {
-      .bar-inner { transition: none !important; }
-      .btn, nav a { transition: none !important; }
+    /* mobile tweaks — keep UI identical, only spacing + readable sizes */
+    @media(max-width:600px){
+      .wrap{padding:14px;margin:14px auto}
+      header{align-items:flex-start}
+      h1{font-size:24px}
+      .logo{width:64px;height:64px}
+      nav{gap:8px}
+      .tiers .tier{flex-direction:column;align-items:stretch}
+      .btn{padding:10px 12px;font-size:15px}
+      .stats{gap:8px}
+      .card{padding:14px}
     }
   </style>
+
+  <!-- Web3Modal v2 (wagmi) initialization — uses your projectId, does NOT add UI -->
+  <script type="module">
+    import { createWeb3Modal, defaultWagmiConfig } from "https://esm.sh/@web3modal/wagmi";
+    import { polygon } from "https://esm.sh/viem/chains";
+
+    const projectId = "56edaed968d799280ffd685113d7f126";
+    const chains = [polygon];
+    const config = defaultWagmiConfig({ chains, projectId });
+
+    const modal = createWeb3Modal({
+      wagmiConfig: config,
+      projectId,
+      chains,
+      themeMode: "dark",
+      themeVariables: {
+        "--w3m-accent-color": "#ffd60a",
+        "--w3m-background-color": "#0b1220"
+      }
+    });
+
+    window.addEventListener('load', () => {
+      // Attach only if a button with known id exists (no new UI elements added)
+      const possibleIds = ['claimBtn','connectBtn','buyMainBtn','seedBuy','earlyBuy','publicBuy'];
+      for(const id of possibleIds){
+        const el = document.getElementById(id);
+        if(!el) continue;
+        // Do not override existing click handlers from demoBuy; only attach to explicit connectBtn/claimBtn if present
+        if(id === 'claimBtn' || id === 'connectBtn'){
+          el.disabled = false;
+          el.addEventListener('click', async (ev) => { ev.preventDefault(); try { await modal.open(); } catch(e){ console.error(e); } });
+        }
+      }
+    });
+
+    window.__GENZ_WEB3_MODAL__ = modal;
+  </script>
 </head>
 <body>
-  <div class="bg" aria-hidden="true"></div>
-
   <div class="wrap">
     <header>
-      <div class="brand" role="banner" aria-label="GENZ brand">
-        <div class="logo" aria-hidden="true">
+      <div class="brand">
+        <div class="logo" aria-label="GENZ logo">
           <img src="./img/IMG_0605.PNG" alt="GENZ logo" loading="lazy">
         </div>
-        <div style="min-width:0">
-          <div class="title">GENZ — Presale</div>
-          <div class="sub">Nickname: <strong>GENZ</strong></div>
+        <div>
+          <div style="font-weight:700">GENZ — Presale</div>
+          <div class="muted" style="font-size:13px">Nickname: <strong>GENZ</strong></div>
         </div>
       </div>
 
-      <nav role="navigation" aria-label="Top navigation">
+      <nav>
         <a href="#tokenomics">Tokenomics</a>
         <a href="#roadmap">Roadmap</a>
         <a href="#faq">FAQ</a>
-        <a class="btn" href="#buy" id="buyMainBtn">Buy</a>
+        <!-- preserved the Buy link as in original interface -->
+        <a class="btn" href="#buy" id="buyMainBtnNav">Buy</a>
       </nav>
     </header>
 
-    <main class="grid" role="main">
+    <main class="grid">
       <section>
-        <div class="card" aria-labelledby="heroTitle">
-          <h1 id="heroTitle">GENZ — next-generation meme coin</h1>
+        <div class="card">
+          <h1>GENZ — next-generation meme coin</h1>
           <p class="lead">Plain truth: this is a presale landing template. Any promises mean nothing without a verifiable contract. Proceed with caution.</p>
 
-          <div class="stats" aria-hidden="true">
-            <div class="stat"><small>Soft cap</small><strong>$10,000</strong></div>
-            <div class="stat"><small>Hard cap</small><strong id="hardcap">$50,000</strong></div>
+          <div class="stats">
+            <div class="stat">
+              <small>Soft cap</small>
+              <strong>$10,000</strong>
+            </div>
+            <div class="stat">
+              <small>Hard cap</small>
+              <strong id="hardcap">$50,000</strong>
+            </div>
           </div>
 
-          <div class="progress" aria-hidden="true">
+          <div class="progress">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div class="muted small">Raised</div>
               <div class="muted small">Target</div>
@@ -224,53 +215,32 @@
             <div class="bar-row"><span id="pct">15%</span><span class="muted small">of hard cap</span></div>
           </div>
 
-          <div id="buy" style="margin-top:14px">
+          <div style="margin-top:12px" id="buy">
             <div class="muted small">Presale status</div>
-            <div class="countdown" id="countdown" aria-live="polite"><!-- JS fills --></div>
+            <div class="countdown" id="countdown"><!-- js will fill --></div>
 
             <div class="tiers" style="margin-top:12px">
-              <div class="tier" aria-label="Seed tier">
-                <div>
-                  <strong>Seed</strong>
-                  <div class="muted small">40% bonus · cap $5,000</div>
-                </div>
-                <div class="right">
-                  <div class="muted small">$0.01/token</div>
-                  <button onclick="demoBuy('seed')" class="btn" id="seedBuy" aria-pressed="false">Buy (demo)</button>
-                </div>
+              <div class="tier">
+                <div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div>
+                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn" id="seedBuy">Buy (demo)</button></div>
               </div>
-
-              <div class="tier" aria-label="Early bird tier">
-                <div>
-                  <strong>Early Bird</strong>
-                  <div class="muted small">25% bonus · cap $15,000</div>
-                </div>
-                <div class="right">
-                  <div class="muted small">$0.02/token</div>
-                  <button onclick="demoBuy('early')" class="btn" id="earlyBuy" aria-pressed="false">Buy (demo)</button>
-                </div>
+              <div class="tier">
+                <div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div>
+                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn" id="earlyBuy">Buy (demo)</button></div>
               </div>
-
-              <div class="tier" aria-label="Public tier">
-                <div>
-                  <strong>Public</strong>
-                  <div class="muted small">0% · cap $30,000</div>
-                </div>
-                <div class="right">
-                  <div class="muted small">$0.03/token</div>
-                  <button onclick="demoBuy('public')" class="btn" id="publicBuy" aria-pressed="false">Buy (demo)</button>
-                </div>
+              <div class="tier">
+                <div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div>
+                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn" id="publicBuy">Buy (demo)</button></div>
               </div>
             </div>
-
-            <p class="muted small" style="margin-top:10px">Buttons are demo-only. For real transactions, integrate Web3 and call your presale contract's buy function.</p>
-            <div id="walletNotice" class="muted small" style="margin-top:8px" role="status" aria-live="polite"></div>
+            <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 and call your presale contract's buy function.</p>
+            <div id="walletNotice" class="muted small" style="margin-top:8px"></div>
           </div>
         </div>
 
-        <div class="card" id="tokenomics" style="margin-top:16px">
+        <div class="card" style="margin-top:16px" id="tokenomics">
           <h3>Tokenomics</h3>
-          <p class="muted small">Transparency &gt; hype. Example allocation below.</p>
+          <p class="muted small">Transparency > hype. Example allocation below.</p>
           <table>
             <tr><td>Total Supply</td><td class="right">1,000,000,000</td></tr>
             <tr><td>Presale</td><td class="right">20%</td></tr>
@@ -281,7 +251,7 @@
           </table>
         </div>
 
-        <div class="card" id="roadmap" style="margin-top:16px">
+        <div class="card" style="margin-top:16px" id="roadmap">
           <h3>Roadmap</h3>
           <ol class="muted small">
             <li>Presale & private listings</li>
@@ -290,7 +260,7 @@
           </ol>
         </div>
 
-        <div class="card" id="faq" style="margin-top:16px">
+        <div class="card" style="margin-top:16px" id="faq">
           <h3>FAQ</h3>
           <details>
             <summary>How do I verify the contract?</summary>
@@ -307,4 +277,104 @@
         <div class="card">
           <h3>Subscribe</h3>
           <p class="muted small">Subscribe — we won't email real lists until you connect a backend.</p>
-          <
+          <form id="subscribeForm" class="subscribe" onsubmit="return false">
+            <input id="email" class="input" placeholder="Email" />
+            <button id="subBtn" class="btn">Subscribe</button>
+          </form>
+          <div id="subMsg" class="muted small" style="margin-top:8px"></div>
+
+          <div style="margin-top:12px">
+            <h4>Quick facts</h4>
+            <div class="muted small">Contract: <span id="contractAddr">0xPUT_CONTRACT_ADDRESS</span></div>
+            <div class="muted small" style="margin-top:6px">Network: Polygon (change in JS)</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4>Disclaimer</h4>
+          <p class="muted small">This file is a template. No financial advice. Test everything on testnet and verify transactions manually.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <div class="muted small">© 2025 GENZE all rights reserved.</div>
+    </footer>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const CONFIG = {
+      PRESALE_START: '2025-10-01T12:00:00Z',
+      PRESALE_END: '2025-10-15T12:00:00Z',
+      PRESALE_TARGET_USD: 50000,
+      RAISED_USD: 7800,
+      CONTRACT_ADDR: '0xPUT_CONTRACT_ADDRESS',
+    };
+
+    // init UI
+    const hardcapEl = document.getElementById('hardcap');
+    const raisedEl = document.getElementById('raised');
+    const targetEl = document.getElementById('target');
+    const barInner = document.getElementById('barInner');
+    const pctEl = document.getElementById('pct');
+    if(hardcapEl) hardcapEl.textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
+    if(raisedEl) raisedEl.textContent = '$' + CONFIG.RAISED_USD.toLocaleString();
+    if(targetEl) targetEl.textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
+    const pct = Math.min(100, Math.round((CONFIG.RAISED_USD / CONFIG.PRESALE_TARGET_USD) * 100));
+    if(barInner) barInner.style.width = pct + '%';
+    if(pctEl) pctEl.textContent = pct + '%';
+    document.getElementById('contractAddr').textContent = CONFIG.CONTRACT_ADDR;
+
+    // countdown
+    function timeLeft(to) {
+      const diff = Math.max(0, new Date(to) - new Date());
+      const days = Math.floor(diff / 86400000);
+      const hrs = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      return {days,hrs,mins,secs,remaining:diff};
+    }
+    function card(label, t){
+      const el = document.createElement('div'); el.className='cd';
+      el.innerHTML = '<small>'+label+'</small><b>'+t.days+'d '+String(t.hrs).padStart(2,'0')+':'+String(t.mins).padStart(2,'0')+':'+String(t.secs).padStart(2,'0')+'</b>';
+      return el;
+    }
+    function renderCountdown(){
+      const start = new Date(CONFIG.PRESALE_START);
+      const end = new Date(CONFIG.PRESALE_END);
+      const now = new Date();
+      const container = document.getElementById('countdown');
+      if(!container) return;
+      container.innerHTML = '';
+      if(now < start){
+        container.appendChild(card('Until start', timeLeft(start)));
+      } else if(now >= start && now <= end){
+        container.appendChild(card('Until end', timeLeft(end)));
+      } else {
+        const el = document.createElement('div'); el.className='cd'; el.textContent='Presale finished'; container.appendChild(el);
+      }
+    }
+    renderCountdown(); setInterval(renderCountdown,1000);
+
+    // subscribe demo
+    document.getElementById('subscribeForm').addEventListener('submit', function(e){
+      e.preventDefault(); const email = document.getElementById('email').value.trim();
+      const msg = document.getElementById('subMsg');
+      if(!/^\S+@\S+\.\S+$/.test(email)){ if(msg) msg.textContent = 'Please enter a valid email.'; return; }
+      if(msg) msg.textContent = 'Thanks — email added to local list (demo).';
+      document.getElementById('email').value='';
+    });
+
+    // Demo buy handler — no alerts
+    function demoBuy(tier){
+      console.log('Demo buy clicked:', tier);
+      const notice = document.getElementById('walletNotice');
+      if(notice) notice.textContent = 'Demo buy clicked (' + tier + '). Integrate Web3 to enable purchases.';
+    }
+    window.demoBuy = demoBuy;
+
+    console.warn('Security: do not deploy this template to production without auditing the contract, backend, and Web3 integrations.');
+  </script>
+</body>
+</html>
