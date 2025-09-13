@@ -7,105 +7,208 @@
   <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
   <style>
     :root{
-      --bg1:#0f1724; --bg2:#06060a; --muted:#9ca3af; --accent1:#ff6bcb; --accent2:#7c5cff;
-      --card:#0b1220; --glass: rgba(255,255,255,0.04);
+      --bg1:#0f1724; --bg2:#06060a;
+      --muted:rgba(255,255,255,0.72);
+      --muted-weak:rgba(255,255,255,0.60);
+      --card-bg: rgba(6,10,20,0.62);
+      --card-border: rgba(255,255,255,0.04);
+      --glass: rgba(255,255,255,0.03);
+      --yellow-1:#ffd60a;
+      --yellow-2:#ffb300;
+      --accent1:#ff6bcb; --accent2:#7c5cff;
       --maxw:1100px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased}
-    .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center}
-    .brand{display:flex;gap:14px;align-items:center}
-    nav{display:flex;gap:14px;align-items:center}
-    nav a{color:var(--muted);text-decoration:none;font-size:14px}
-    .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));padding:10px 14px;border-radius:12px;color:#061026;font-weight:700;text-decoration:none}
 
-    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:20px}
+    /* reset + base */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+      color: #fff;
+      -webkit-font-smoothing:antialiased;
+      background-color:var(--bg1);
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* background image layer + overlay */
+    .bg {
+      position: fixed;
+      inset: 0;
+      background-image: url('./img/IMG_0606.PNG');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
+      filter: saturate(0.9) contrast(0.9);
+      transform: translateZ(0);
+    }
+    .bg::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      /* dark gradient overlay to ensure legibility */
+      background: linear-gradient(180deg, rgba(2,6,23,0.75), rgba(2,8,25,0.85));
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .wrap{
+      max-width:var(--maxw);
+      margin:28px auto;
+      padding:24px;
+      position:relative;
+      z-index: 2; /* above bg overlay */
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom: 6px;
+    }
+
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo {
+      width:86px;
+      height:86px;
+      border-radius:50%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 2px solid rgba(255,255,255,0.06);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 18px rgba(255,180,20,0.06) inset;
+    }
+    .logo img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+
+    .brand hgroup{line-height:1}
+    .brand .title{font-weight:800; font-size:16px; color: #fff}
+    .brand .sub{color:var(--muted-weak);font-size:13px;margin-top:2px}
+
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{
+      color:var(--muted-weak);
+      text-decoration:none;
+      font-size:14px;
+      padding:8px 10px;
+      border-radius:10px;
+      transition: all .18s ease;
+    }
+    nav a:hover{background: rgba(255,255,255,0.03); color: #fff; transform: translateY(-2px)}
+
+    /* updated button styles */
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      background: linear-gradient(135deg, var(--yellow-1), var(--yellow-2));
+      color: #0b1220;
+      font-weight:800;
+      text-decoration:none;
+      padding:10px 18px;
+      border-radius:14px;
+      box-shadow:
+        0 6px 22px rgba(255,182,0,0.18),
+        0 2px 6px rgba(0,0,0,0.45),
+        inset 0 -6px 18px rgba(255,160,0,0.06);
+      transition: transform .18s ease, box-shadow .18s ease;
+      border: 0;
+      cursor:pointer;
+      font-size:15px;
+    }
+    .btn:focus{outline:3px solid rgba(255,214,10,0.12); outline-offset:2px}
+    .btn:hover{transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 30px rgba(255,182,0,0.24), 0 4px 10px rgba(0,0,0,0.5)}
+    .btn:active{transform: translateY(0) scale(0.99); box-shadow: 0 6px 18px rgba(255,160,0,0.18)}
+
+    /* layout grid */
+    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:6px}
     @media(min-width:960px){.grid{grid-template-columns:1fr 420px}}
 
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:14px}
-    h1{margin:0;font-size:34px}
-    p.lead{color:var(--muted);margin-top:8px}
+    /* cards: darker + glass blur for contrast */
+    .card{
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding:18px;
+      border-radius:14px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+      backdrop-filter: blur(6px) saturate(1.05);
+      -webkit-backdrop-filter: blur(6px) saturate(1.05);
+    }
+
+    h1{margin:0;font-size:34px;color:#fff;text-shadow: 0 6px 30px rgba(0,0,0,0.7)}
+    p.lead{color:var(--muted-weak);margin-top:8px}
 
     .stats{display:flex;gap:12px;margin-top:16px}
-    .stat{background:var(--card);padding:10px;border-radius:10px;flex:1}
-    .stat small{color:var(--muted);display:block}
-    .stat strong{display:block;font-size:18px}
+    .stat{background: rgba(3,6,13,0.48); padding:12px;border-radius:10px;flex:1;border:1px solid rgba(255,255,255,0.02)}
+    .stat small{color:var(--muted-weak);display:block}
+    .stat strong{display:block;font-size:18px;color:#fff}
 
     .progress{margin-top:14px}
-    .bar{height:12px;background:#061026;border-radius:999px;overflow:hidden}
-    .bar-inner{height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));transition:width .9s ease}
-    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:8px}
+    .bar{height:12px;background: rgba(255,255,255,0.04);border-radius:999px;overflow:hidden;border:1px solid rgba(0,0,0,0.35)}
+    .bar-inner{height:100%;width:0;background: linear-gradient(90deg, var(--yellow-1), var(--yellow-2)); transition:width .9s ease; box-shadow: 0 6px 14px rgba(255,180,20,0.12) inset}
+    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted-weak);margin-top:8px}
 
     .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .cd{background:var(--card);padding:10px 12px;border-radius:8px;text-align:center;min-width:76px}
+    .cd{background: rgba(3,6,13,0.5); padding:10px 12px;border-radius:8px;text-align:center;min-width:88px; color:#fff; border:1px solid rgba(255,255,255,0.02)}
+    .cd small{display:block;color:var(--muted-weak); font-size:12px}
     .cd b{display:block;font-size:18px}
-    .tiers{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-    .tier{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#071122;border-radius:10px}
 
-    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    .tiers{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .tier{display:flex;justify-content:space-between;align-items:center;padding:12px;background: rgba(3,6,13,0.45);border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+    .tier strong{font-size:15px}
+
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;color:var(--muted-weak)}
     td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
 
-    footer{color:var(--muted);font-size:13px;margin-top:18px;text-align:center}
-
-    /* small utilities */
-    .muted{color:var(--muted)}
-    .right{text-align:right}
+    footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
 
     /* subscribe */
     .subscribe{display:flex;gap:8px;margin-top:10px}
-    .input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;flex:1}
-    .small{font-size:13px}
+    .input{
+      padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.25); color: #fff; flex:1;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
 
-    /* Logo (updated) */
-    .logo {
-      width: 86px;                 /* final circular diameter */
-      height: 86px;
-      border-radius: 50%;         /* makes it round */
-      overflow: hidden;           /* crop image to circle */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.06);
-      box-shadow: 0 8px 20px rgba(2,6,23,0.6);
-    }
-    .logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;          /* keep aspect, fill circle */
-      display: block;
-      -webkit-user-drag: none;
-      user-select: none;
-    }
+    /* small util */
+    .muted{color:var(--muted-weak)}
+    .right{text-align:right}
 
     /* FAQ */
-    details{background:#071224;padding:10px;border-radius:8px}
-    summary{cursor:pointer;font-weight:600}
+    details{background: rgba(3,6,13,0.45); padding:10px;border-radius:8px}
+    summary{cursor:pointer;font-weight:600;color:#fff}
 
-    /* responsive */
+    /* responsive adjustments */
     @media(max-width:600px){
-      h1{font-size:24px}
+      h1{font-size:22px}
       .logo{width:64px;height:64px}
+      nav{gap:8px}
+      .cd{min-width:64px;padding:8px}
     }
   </style>
 </head>
 <body>
+  <div class="bg" aria-hidden="true"></div>
+
   <div class="wrap">
     <header>
-      <div class="brand">
-        <!-- Use the image path you have; this assumes ./img/IMG_0605.PNG exists -->
+      <div class="brand" role="banner">
         <div class="logo" aria-label="GENZ logo">
           <img src="./img/IMG_0605.PNG" alt="GENZ logo">
         </div>
-
         <div>
-          <div style="font-weight:700">GENZ — Presale</div>
-          <div class="muted" style="font-size:13px">Nickname: <strong>GENZ</strong></div>
+          <div class="title">GENZ — Presale</div>
+          <div class="sub">Nickname: <strong>GENZ</strong></div>
         </div>
       </div>
-      <nav>
+
+      <nav role="navigation" aria-label="Top navigation">
         <a href="#tokenomics">Tokenomics</a>
         <a href="#roadmap">Roadmap</a>
         <a href="#faq">FAQ</a>
@@ -147,18 +250,27 @@
 
           <div style="margin-top:12px" id="buy">
             <div class="muted small">Presale status</div>
-            <div class="countdown" id="countdown">
-              <!-- js will fill -->
-            </div>
+            <div class="countdown" id="countdown"><!-- JS fills --></div>
 
             <div class="tiers" style="margin-top:12px">
-              <div class="tier"><div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div><div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn">Buy (demo)</button></div></div>
-              <div class="tier"><div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div><div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn">Buy (demo)</button></div></div>
-              <div class="tier"><div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div><div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn">Buy (demo)</button></div></div>
+              <div class="tier">
+                <div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div>
+                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn">Buy (demo)</button></div>
+              </div>
+
+              <div class="tier">
+                <div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div>
+                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn">Buy (demo)</button></div>
+              </div>
+
+              <div class="tier">
+                <div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div>
+                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn">Buy (demo)</button></div>
+              </div>
             </div>
+
             <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 (ethers.js / web3modal) and verify the contract address on the explorer.</p>
           </div>
-
         </div>
 
         <div class="card" style="margin-top:16px" id="tokenomics">
@@ -194,7 +306,6 @@
             <div class="muted small" style="margin-top:8px">You need a wallet (MetaMask). Integration is done via ethers.js / Web3 modal. Never share private keys.</div>
           </details>
         </div>
-
       </section>
 
       <aside>
@@ -235,7 +346,6 @@
       RAISED_USD: 7800,
       CONTRACT_ADDR: '0xPUT_CONTRACT_ADDRESS',
     };
-    // ====================================================
 
     // init ui
     document.getElementById('hardcap').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
@@ -273,7 +383,7 @@
     }
     function card(label, t){
       const el = document.createElement('div'); el.className='cd';
-      el.innerHTML = '<small class="muted">'+label+'</small><b>'+t.days+'d '+String(t.hrs).padStart(2,'0')+':'+String(t.mins).padStart(2,'0')+':'+String(t.secs).padStart(2,'0')+'</b>';
+      el.innerHTML = '<small>'+label+'</small><b>'+t.days+'d '+String(t.hrs).padStart(2,'0')+':'+String(t.mins).padStart(2,'0')+':'+String(t.secs).padStart(2,'0')+'</b>';
       return el;
     }
     renderCountdown(); setInterval(renderCountdown,1000);
@@ -293,7 +403,7 @@
     }
     window.demoBuy = demoBuy;
 
-    // Small UX: console warning for safety
+    // Console safety note
     console.warn('Security: do not deploy this template to production without auditing the contract, backend, and Web3 integrations.');
   </script>
 </body>
