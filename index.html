@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GENZ — Presale</title>
+  <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
+  <style>
+    :root{
+      --bg1:#0f1724; --bg2:#06060a; --muted:#9ca3af; --accent1:#ff6bcb; --accent2:#7c5cff;
+      --card:#0b1220; --glass: rgba(255,255,255,0.04);
+      --maxw:1100px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased}
+    .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center}
+    .brand{display:flex;gap:14px;align-items:center}
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;font-size:14px}
+    .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));padding:10px 14px;border-radius:12px;color:#061026;font-weight:700;text-decoration:none}
+
+    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:20px}
+    @media(min-width:960px){.grid{grid-template-columns:1fr 420px}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:14px}
+    h1{margin:0;font-size:34px}
+    p.lead{color:var(--muted);margin-top:8px}
+
+    .stats{display:flex;gap:12px;margin-top:16px}
+    .stat{background:var(--card);padding:10px;border-radius:10px;flex:1}
+    .stat small{color:var(--muted);display:block}
+    .stat strong{display:block;font-size:18px}
+
+    .progress{margin-top:14px}
+    .bar{height:12px;background:#061026;border-radius:999px;overflow:hidden}
+    .bar-inner{height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));transition:width .9s ease}
+    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:8px}
+
+    .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .cd{background:var(--card);padding:10px 12px;border-radius:8px;text-align:center;min-width:76px}
+    .cd b{display:block;font-size:18px}
+    .tiers{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+    .tier{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#071122;border-radius:10px}
+
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
+
+    footer{color:var(--muted);font-size:13px;margin-top:18px;text-align:center}
+
+    /* small utilities */
+    .muted{color:var(--muted)}
+    .right{text-align:right}
+
+    /* subscribe */
+    .subscribe{display:flex;gap:8px;margin-top:10px}
+    .input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;flex:1}
+    .small{font-size:13px}
+
+    /* Logo (updated) */
+    .logo {
+      width: 86px;                 /* final circular diameter */
+      height: 86px;
+      border-radius: 50%;         /* makes it round */
+      overflow: hidden;           /* crop image to circle */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 20px rgba(2,6,23,0.6);
+    }
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;          /* keep aspect, fill circle */
+      display: block;
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    /* FAQ */
+    details{background:#071224;padding:10px;border-radius:8px}
+    summary{cursor:pointer;font-weight:600}
+
+    /* responsive */
+    @media(max-width:600px){
+      h1{font-size:24px}
+      .logo{width:64px;height:64px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <!-- Use the image path you have; this assumes ./img/IMG_0605.PNG exists -->
+        <div class="logo" aria-label="GENZ logo">
+          <img src="./img/IMG_0605.PNG" alt="GENZ logo">
+        </div>
+
+        <div>
+          <div style="font-weight:700">GENZ — Presale</div>
+          <div class="muted" style="font-size:13px">Nickname: <strong>GENZ</strong></div>
+        </div>
+      </div>
+      <nav>
+        <a href="#tokenomics">Tokenomics</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn" href="#buy">Buy</a>
+      </nav>
+    </header>
+
+    <main class="grid">
+      <section>
+        <div class="card">
+          <h1>GENZ — next-generation meme coin</h1>
+          <p class="lead">Plain truth: this is a presale landing template. Any promises mean nothing without a verifiable contract. Proceed with caution.</p>
+
+          <div class="stats">
+            <div class="stat">
+              <small>Soft cap</small>
+              <strong>$10,000</strong>
+            </div>
+            <div class="stat">
+              <small>Hard cap</small>
+              <strong id="hardcap">$50,000</strong>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div class="muted small">Raised</div>
+              <div class="muted small">Target</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div><strong id="raised">$7,800</strong></div>
+              <div><strong id="target">$50,000</strong></div>
+            </div>
+            <div class="bar" aria-hidden="true" style="margin-top:10px">
+              <div class="bar-inner" id="barInner" style="width:15%"></div>
+            </div>
+            <div class="bar-row"><span id="pct">15%</span><span class="muted small">of hard cap</span></div>
+          </div>
+
+          <div style="margin-top:12px" id="buy">
+            <div class="muted small">Presale status</div>
+            <div class="countdown" id="countdown">
+              <!-- js will fill -->
+            </div>
+
+            <div class="tiers" style="margin-top:12px">
+              <div class="tier"><div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div><div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn">Buy (demo)</button></div></div>
+              <div class="tier"><div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div><div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn">Buy (demo)</button></div></div>
+              <div class="tier"><div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div><div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn">Buy (demo)</button></div></div>
+            </div>
+            <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 (ethers.js / web3modal) and verify the contract address on the explorer.</p>
+          </div>
+
+        </div>
+
+        <div class="card" style="margin-top:16px" id="tokenomics">
+          <h3>Tokenomics</h3>
+          <p class="muted small">Transparency > hype. Example allocation below.</p>
+          <table>
+            <tr><td>Total Supply</td><td class="right">1,000,000,000</td></tr>
+            <tr><td>Presale</td><td class="right">20%</td></tr>
+            <tr><td>Liquidity</td><td class="right">30%</td></tr>
+            <tr><td>Team (vesting)</td><td class="right">10%</td></tr>
+            <tr><td>Marketing / Growth</td><td class="right">20%</td></tr>
+            <tr><td>Airdrop / Community</td><td class="right">10%</td></tr>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="roadmap">
+          <h3>Roadmap</h3>
+          <ol class="muted small">
+            <li>Presale & private listings</li>
+            <li>CEX / DEX listings, liquidity add</li>
+            <li>Marketing push, community events, merch</li>
+          </ol>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="faq">
+          <h3>FAQ</h3>
+          <details>
+            <summary>How do I verify the contract?</summary>
+            <div class="muted small" style="margin-top:8px">Copy the contract address and check its code/transactions on Etherscan / BscScan depending on the network.</div>
+          </details>
+          <details style="margin-top:8px">
+            <summary>How do I participate?</summary>
+            <div class="muted small" style="margin-top:8px">You need a wallet (MetaMask). Integration is done via ethers.js / Web3 modal. Never share private keys.</div>
+          </details>
+        </div>
+
+      </section>
+
+      <aside>
+        <div class="card">
+          <h3>Subscribe</h3>
+          <p class="muted small">Subscribe — we won't email real lists until you connect a backend.</p>
+          <form id="subscribeForm" class="subscribe" onsubmit="return false">
+            <input id="email" class="input" placeholder="Email" />
+            <button id="subBtn" class="btn">Subscribe</button>
+          </form>
+          <div id="subMsg" class="muted small" style="margin-top:8px"></div>
+
+          <div style="margin-top:12px">
+            <h4>Quick facts</h4>
+            <div class="muted small">Contract: <span id="contractAddr">0xPUT_CONTRACT_ADDRESS</span></div>
+            <div class="muted small" style="margin-top:6px">Network: Ethereum (change in JS)</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4>Disclaimer</h4>
+          <p class="muted small">This file is a template. No financial advice. Test everything on testnet and verify transactions manually.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <div class="muted small">© 2025 GENZE all rights reserved.</div>
+    </footer>
+  </div>
+
+  <script>
+    // ===== CONFIG: replace these values for your project =====
+    const CONFIG = {
+      PRESALE_START: '2025-10-01T12:00:00Z', // ISO
+      PRESALE_END: '2025-10-15T12:00:00Z',
+      PRESALE_TARGET_USD: 50000,
+      RAISED_USD: 7800,
+      CONTRACT_ADDR: '0xPUT_CONTRACT_ADDRESS',
+    };
+    // ====================================================
+
+    // init ui
+    document.getElementById('hardcap').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
+    document.getElementById('raised').textContent = '$' + CONFIG.RAISED_USD.toLocaleString();
+    document.getElementById('target').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
+    const pct = Math.min(100, Math.round((CONFIG.RAISED_USD / CONFIG.PRESALE_TARGET_USD) * 100));
+    document.getElementById('barInner').style.width = pct + '%';
+    document.getElementById('pct').textContent = pct + '%';
+    document.getElementById('contractAddr').textContent = CONFIG.CONTRACT_ADDR;
+
+    // Countdown
+    function timeLeft(to) {
+      const diff = Math.max(0, new Date(to) - new Date());
+      const days = Math.floor(diff / 86400000);
+      const hrs = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      return {days,hrs,mins,secs,remaining:diff};
+    }
+    function renderCountdown(){
+      const start = new Date(CONFIG.PRESALE_START);
+      const end = new Date(CONFIG.PRESALE_END);
+      const now = new Date();
+      const container = document.getElementById('countdown');
+      container.innerHTML = '';
+      if(now < start){
+        const t = timeLeft(start);
+        container.appendChild(card('Until start', t));
+      } else if(now >= start && now <= end){
+        const t = timeLeft(end);
+        container.appendChild(card('Until end', t));
+      } else {
+        const el = document.createElement('div'); el.className='cd'; el.textContent='Presale finished'; container.appendChild(el);
+      }
+    }
+    function card(label, t){
+      const el = document.createElement('div'); el.className='cd';
+      el.innerHTML = '<small class="muted">'+label+'</small><b>'+t.days+'d '+String(t.hrs).padStart(2,'0')+':'+String(t.mins).padStart(2,'0')+':'+String(t.secs).padStart(2,'0')+'</b>';
+      return el;
+    }
+    renderCountdown(); setInterval(renderCountdown,1000);
+
+    // Subscribe demo
+    document.getElementById('subscribeForm').addEventListener('submit', function(e){
+      e.preventDefault(); const email = document.getElementById('email').value.trim();
+      const msg = document.getElementById('subMsg');
+      if(!/^\S+@\S+\.\S+$/.test(email)){ msg.textContent = 'Please enter a valid email.'; return; }
+      msg.textContent = 'Thanks — email added to local list (demo).';
+      document.getElementById('email').value='';
+    });
+
+    // Demo buy handler (UI only)
+    function demoBuy(tier){
+      alert('DEMO: purchase function not implemented. Integrate Web3 for real transactions.');
+    }
+    window.demoBuy = demoBuy;
+
+    // Small UX: console warning for safety
+    console.warn('Security: do not deploy this template to production without auditing the contract, backend, and Web3 integrations.');
+  </script>
+</body>
+</html>
