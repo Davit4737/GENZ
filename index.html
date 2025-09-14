@@ -506,91 +506,89 @@
     document.getElementById('target').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
     // (остальная логика — без изменений)
   </script>
-  <script type="module">
+
+<script type="module">
 /*
-  Вставь перед </body>. Скрипт не меняет интерфейс, только добавляет логику кнопкам Buy.
-  Настройки:
-    PROJECT_ADDRESS - твой адрес Solana (уже подставлен).
-    TIERS_SOL - сумма в SOL для каждого tier (укажи реальные значения).
-    BACKEND_VERIFY_ENDPOINT - если есть бэкенд для верификации, оставь URL; иначе оставь ''.
+  Обновлённый GENZ buy script — исправлены проблемы:
+  - совместимость с браузером (TextEncoder вместо Buffer)
+  - TransactionInstruction для memo
+  - автозапуск Pay flow после connect при клике Buy
+  - fallback signTransaction / signAndSendTransaction
+  Вставь перед </body>.
 */
 
-import { Connection, PublicKey, SystemProgram, Transaction } from 'https://esm.sh/@solana/web3.js@1.77.0';
+import { Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction } from 'https://esm.sh/@solana/web3.js@1.77.0';
 
-const PROJECT_ADDRESS = new PublicKey('7Ton9ubUjbGX3bLrh1g2KBXCdBFjJQG8HDhDfboVwWFy');
-const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com'; // при желании заменить на QuickNode/платный
+const SOL_PROJECT_ADDRESS = new PublicKey('7Ton9ubUjbGX3bLrh1g2KBXCdBFjJQG8HDhDfboVwWFy');
+const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
 const connection = new Connection(RPC_ENDPOINT, 'confirmed');
 
-// Укажи реальные суммы в SOL для каждого кнопочного tier:
-const TIERS_SOL = {
-  seed: 0.5,   // пример: 0.5 SOL — замени на своё
-  early: 0.25, // пример
-  public: 0.1  // пример
-};
+const PRICE_PER_GENZ_USD = 0.0001;
+const COINGECKO_SIMPLE_PRICE = 'https://api.coingecko.com/api/v3/simple/price?ids=solana,bitcoin&vs_currencies=usd';
 
-// Если у тебя есть backend для верификации платежа — укажи endpoint, иначе оставь пустым ''
-const BACKEND_VERIFY_ENDPOINT = '/api/verify-payment';
+// Default USD amounts for tiers (used to auto-start payment). Измени как нужно.
+const TIER_USD = { seed: 50, early: 25, public: 10 };
 
-// ---------- утилиты ----------
-function shortLog(v){ console.log('[GENZ buy]', v); }
-function uuidv4(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r = Math.random()*16|0; const v = c==='x'? r : (r&0x3|0x8); return v.toString(16); }); }
-function el(id){ return document.getElementById(id); }
-function setTempFeedback(msg, isError=false){
-  // помещаем краткий фидбэк рядом с buy (не трогаем интерфейс)
-  const fbId = '__genz_buy_feedback';
-  let fb = document.getElementById(fbId);
-  if(!fb){
-    fb = document.createElement('div');
-    fb.id = fbId;
-    fb.style.marginTop = '10px';
-    fb.style.color = isError ? '#ff7b7b' : '#aaf06a';
-    const container = el('buy') || document.body;
-    container.appendChild(fb);
-  }
-  fb.style.color = isError ? '#ff7b7b' : '#aaf06a';
-  fb.textContent = msg;
-}
+// ------ helpers ------
+const enc = (s) => new TextEncoder().encode(String(s));
+const uuidv4 = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r=Math.random()*16|0; const v = c==='x'? r : (r&0x3|0x8); return v.toString(16); });
+const log = (...a) => console.log('[GENZ]', ...a);
 
-// Попытка найти провайдера (Phantom / другие поставщики solana в window.solana)
-function getSolanaProvider(){
+function getPhantomProvider(){
   const w = window;
-  if (w.solana) {
-    // Phantom или другой кошелёк, если есть providers — найди Phantom первым
-    if (Array.isArray(w.solana.providers)) {
-      return w.solana.providers.find(p=>p.isPhantom) || w.solana.providers[0];
-    }
-    return w.solana;
-  }
-  return null;
+  if (!w.solana) return null;
+  // Phantom may expose itself as solana (isPhantom) or among providers
+  if (w.solana.isPhantom) return w.solana;
+  if (Array.isArray(w.solana.providers)) return w.solana.providers.find(p=>p.isPhantom) || w.solana.providers[0];
+  return w.solana;
 }
 
-// Создаёт и отправляет транзакцию: transfer + memo
-async function createAndSendTx(provider, payerPubkey, amountSOL, purchaseId){
-  const lamports = Math.round(amountSOL * 1e9);
+// create memo instruction safely (TextEncoder)
+function memoInstruction(purchaseId){
+  const PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+  return new TransactionInstruction({
+    keys: [],
+    programId: PROGRAM_ID,
+    data: enc(purchaseId)
+  });
+}
+
+// compute SOL price via CoinGecko (fallback if fails)
+async function loadPrices(){
+  try{
+    const r = await fetch(COINGECKO_SIMPLE_PRICE);
+    const j = await r.json();
+    return { sol: j.solana?.usd || null, btc: j.bitcoin?.usd || null };
+  }catch(e){
+    console.warn('price load fail', e);
+    return { sol: null, btc: null };
+  }
+}
+
+// Create + send transaction (transfer SOL + memo). Returns signature.
+async function createAndSendSolTx(provider, solAmount, purchaseId){
+  if (!provider) throw new Error('no_provider');
+  if (!provider.publicKey) throw new Error('no_pubkey');
+
+  const lamports = Math.round(Number(solAmount) * 1e9);
+  if (lamports <= 0) throw new Error('invalid_amount');
+
   const tx = new Transaction();
   tx.add(SystemProgram.transfer({
-    fromPubkey: payerPubkey,
-    toPubkey: PROJECT_ADDRESS,
+    fromPubkey: provider.publicKey,
+    toPubkey: SOL_PROJECT_ADDRESS,
     lamports
   }));
+  tx.add(memoInstruction(purchaseId));
 
-  // memo instruction (SPL memo program)
-  const memoProgramId = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-  tx.add({
-    keys: [],
-    programId: memoProgramId,
-    data: Buffer.from(String(purchaseId), 'utf8')
-  });
-
-  // prepare recent blockhash and fee payer
+  // blockhash + fee payer
   const { blockhash } = await connection.getLatestBlockhash('finalized');
   tx.recentBlockhash = blockhash;
-  tx.feePayer = payerPubkey;
+  tx.feePayer = provider.publicKey;
 
-  // Поддерживаем Phantom signAndSendTransaction или signTransaction
+  // sign & send: Phantom often supports signAndSendTransaction
   if (provider.signAndSendTransaction) {
     const signed = await provider.signAndSendTransaction(tx);
-    // signed.signature — tx signature
     await connection.confirmTransaction(signed.signature, 'confirmed');
     return signed.signature;
   } else if (provider.signTransaction) {
@@ -600,341 +598,169 @@ async function createAndSendTx(provider, payerPubkey, amountSOL, purchaseId){
     await connection.confirmTransaction(sig, 'confirmed');
     return sig;
   } else {
-    throw new Error('wallet_cannot_sign');
+    throw new Error('wallet_missing_sign_methods');
   }
 }
 
-// Обработчик покупки для конкретного tier
-async function handleBuy(tierKey){
-  try {
-    setTempFeedback('Подключаем кошелек...');
-    const provider = getSolanaProvider();
-    if(!provider) {
-      setTempFeedback('Кошелёк Solana не найден. Установите Phantom или совместимый кошелек.', true);
-      return;
+// ===== modal & flow =====
+function openBuyModal({ autoTier=null } = {}) {
+  // если уже открыт — ничего не делаем
+  if (document.getElementById('__genz_modal')) return;
+
+  // простая модалка (минимал)
+  const overlay = document.createElement('div');
+  overlay.id = '__genz_modal';
+  Object.assign(overlay.style, { position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.6)',zIndex:9999 });
+
+  const box = document.createElement('div');
+  Object.assign(box.style, { width:'520px',maxWidth:'95%',background:'#071025',padding:'16px',borderRadius:'10px',color:'#fff',position:'relative' });
+
+  const close = document.createElement('button');
+  close.textContent = '✕';
+  Object.assign(close.style, { position:'absolute',right:'10px',top:'8px',background:'transparent',border:'none',color:'#ffd60a',fontSize:'18px',cursor:'pointer' });
+  close.onclick = ()=> overlay.remove();
+
+  const title = document.createElement('h3'); title.textContent = 'Buy GENZ';
+  const desc = document.createElement('div'); desc.textContent = `GENZ price = $${PRICE_PER_GENZ_USD} / token. Токены начислят вручную.`;
+  desc.style.opacity = 0.9;
+
+  // currency select and inputs
+  const select = document.createElement('select');
+  ['SOL','USDT','BTC'].forEach(c=> select.appendChild(new Option(c,c)));
+  select.style.width = '100%';
+  select.style.marginTop = '10px';
+  const usdInput = document.createElement('input'); usdInput.type='number'; usdInput.placeholder='Сумма в USD (напр. 10)'; usdInput.style.width='100%'; usdInput.style.marginTop='10px';
+  const cryptoInput = document.createElement('input'); cryptoInput.type='number'; cryptoInput.placeholder='Либо сумма в крипто (напр. 0.01)'; cryptoInput.style.width='100%'; cryptoInput.style.marginTop='6px';
+
+  const infoLine = document.createElement('div'); infoLine.style.marginTop='10px'; infoLine.style.fontSize='14px'; infoLine.style.opacity=0.9; infoLine.textContent = 'Загрузка курсов...';
+
+  const resultLine = document.createElement('div'); resultLine.style.marginTop='8px'; resultLine.style.fontWeight='700'; resultLine.textContent = 'GENZ: —';
+
+  const btnPay = document.createElement('button'); btnPay.textContent = 'Pay with SOL (Phantom)'; Object.assign(btnPay.style, { marginTop:'12px', padding:'10px 12px', borderRadius:'10px', background:'#ffd60a', border:'none', cursor:'pointer', fontWeight:700 });
+  const btnCopy = document.createElement('button'); btnCopy.textContent = 'Copy address (USDT/BTC)'; Object.assign(btnCopy.style, { marginLeft:'8px', marginTop:'12px', padding:'8px 10px', borderRadius:'10px', background:'transparent', border:'1px solid rgba(255,255,255,0.06)', color:'#fff', cursor:'pointer' });
+
+  box.appendChild(close); box.appendChild(title); box.appendChild(desc);
+  box.appendChild(select); box.appendChild(usdInput); box.appendChild(cryptoInput);
+  box.appendChild(infoLine); box.appendChild(resultLine);
+  const row = document.createElement('div'); row.style.display='flex'; row.appendChild(btnPay); row.appendChild(btnCopy); box.appendChild(row);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // prices load
+  let prices = { sol:null, btc:null };
+  async function refreshPrices(){
+    prices = await loadPrices();
+    infoLine.textContent = `Курсы: SOL ≈ $${prices.sol ?? 'n/a'}, BTC ≈ $${prices.btc ?? 'n/a'}`;
+    recompute();
+  }
+  refreshPrices();
+
+  function recompute(){
+    const cur = select.value;
+    const usd = parseFloat(usdInput.value || '0');
+    const crypto = parseFloat(cryptoInput.value || '0');
+    let usdEffective = usd;
+    if (crypto > 0){
+      if (cur === 'SOL' && prices.sol) usdEffective = crypto * prices.sol;
+      else if (cur === 'BTC' && prices.btc) usdEffective = crypto * prices.btc;
+      else if (cur === 'USDT') usdEffective = crypto;
+      else usdEffective = 0;
     }
+    const genz = usdEffective > 0 ? Math.floor(usdEffective / PRICE_PER_GENZ_USD) : 0;
+    resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${(usdEffective).toFixed(2)})`;
+  }
 
-    // соединяемся с кошельком (если не подключён)
-    if(!provider.isConnected){
-      try { await provider.connect(); } catch(e){ setTempFeedback('Подключение к кошельку отменено.', true); return; }
-    }
+  usdInput.oninput = ()=> { cryptoInput.value=''; recompute(); };
+  cryptoInput.oninput = ()=> { usdInput.value=''; recompute(); };
+  select.onchange = ()=> { usdInput.value=''; cryptoInput.value=''; recompute(); };
 
-    const pubkey = provider.publicKey;
-    if(!pubkey){
-      setTempFeedback('Ошибка: не удалось получить публичный ключ из кошелька.', true);
-      return;
-    }
+  // Auto fill if modal opened from tier button
+  if (autoTier && TIER_USD[autoTier]) {
+    usdInput.value = TIER_USD[autoTier];
+    recompute();
+    // attempt to auto-start payment after a short delay (so prices can load and provider.connect runs)
+    setTimeout(()=> tryAutoPay(select.value, usdInput, cryptoInput, btnPay, resultLine), 350);
+  }
 
-    const amountSOL = TIERS_SOL[tierKey];
-    if(!amountSOL){ setTempFeedback('Неверный tier: ' + tierKey, true); return; }
+  // pay handler
+  btnPay.addEventListener('click', async ()=>{
+    await tryAutoPay(select.value, usdInput, cryptoInput, btnPay, resultLine);
+  });
 
-    const purchaseId = uuidv4();
-
-    setTempFeedback('Пожалуйста, подтвердите перевод в кошельке...');
-
-    // создаём и отправляем транзакцию
-    const txSig = await createAndSendTx(provider, pubkey, amountSOL, purchaseId);
-    shortLog('txSig: ' + txSig);
-    setTempFeedback('Транзакция отправлена: ' + txSig + '. Верифицируем...');
-
-    // Опционально: отправляем на бэкенд для верификации (если есть)
-    if (BACKEND_VERIFY_ENDPOINT){
-      try {
-        const resp = await fetch(BACKEND_VERIFY_ENDPOINT, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ purchaseId, txSig, expectedSol: amountSOL, wallet: pubkey.toString(), tier: tierKey })
-        });
-        const j = await resp.json();
-        if (resp.ok && j.ok) {
-          setTempFeedback('Оплата подтверждена. Вы в списке участников.');
-        } else {
-          setTempFeedback('Платёж отправлен, но верификация не прошла: ' + (j.reason || 'unknown'), true);
-        }
-      } catch(e){
-        // если бэкенда нет или ошибка, просто уведомим, но tx всё равно сделан
-        setTempFeedback('Транзакция отправлена (tx: ' + txSig + '). Сервер верификации не ответил.', false);
-      }
+  btnCopy.addEventListener('click', async ()=>{
+    const cur = select.value;
+    if (cur === 'USDT'){
+      await navigator.clipboard.writeText('0x37D5675003ed3D97734aB92a9CEf8bD3F694531d');
+      resultLine.textContent = 'USDT (Polygon) адрес скопирован.';
+    } else if (cur === 'BTC'){
+      await navigator.clipboard.writeText('bc1q9vdyrf5fs2yjkguewlg4cvzzccfpcctlxdmx6z');
+      resultLine.textContent = 'BTC адрес скопирован.';
     } else {
-      setTempFeedback('Транзакция отправлена (tx: ' + txSig + '). Запишите sig для поддержки.', false);
+      await navigator.clipboard.writeText(SOL_PROJECT_ADDRESS.toString());
+      resultLine.textContent = 'SOL адрес скопирован.';
     }
+  });
 
-  } catch (err) {
-    console.error('buy error', err);
-    const msg = (err && err.message) ? err.message : String(err);
-    setTempFeedback('Ошибка: ' + msg, true);
+  // auto-pay attempt function
+  async function tryAutoPay(cur, usdInputEl, cryptoInputEl, payButtonEl, resultEl){
+    try{
+      if (cur !== 'SOL') { resultEl.textContent = 'Pay with SOL available only for SOL. Для других валют — копируйте адрес.'; return; }
+      const provider = getPhantomProvider();
+      if (!provider) { resultEl.textContent = 'Phantom not found. Ask user to install Phantom.'; return; }
+
+      // connect if not connected (this will trigger wallet popup)
+      if (!provider.isConnected) {
+        await provider.connect();
+      }
+      // compute SOL amount
+      const usd = parseFloat(usdInputEl.value || '0');
+      const crypto = parseFloat(cryptoInputEl.value || '0');
+      let solAmount = 0;
+      if (crypto > 0) solAmount = crypto;
+      else if (usd > 0) {
+        if (!prices.sol) { resultEl.textContent = 'Курс SOL не загружен — попробуйте чуть позже.'; return; }
+        solAmount = usd / prices.sol;
+      } else {
+        resultEl.textContent = 'Введите сумму в USD или SOL.'; return;
+      }
+
+      // purchaseId
+      const purchaseId = uuidv4();
+      resultEl.textContent = 'Создаю и подписываю транзакцию...';
+
+      // create/send tx
+      const sig = await createAndSendSolTx(provider, solAmount, purchaseId);
+      resultEl.textContent = `Транзакция отправлена: ${sig}. purchaseId: ${purchaseId}`;
+      log('paid', { sig, purchaseId, solAmount });
+      // optionally POST to backend here
+    }catch(err){
+      console.error('autoPay err', err);
+      resultEl.textContent = 'Ошибка: ' + (err.message || err.toString());
+    }
   }
-}
 
-// Навешиваем слушатели на кнопки, если они есть (не трогаем DOM)
-function attachButtons(){
-  const map = { seedBuy: 'seed', earlyBuy: 'early', publicBuy: 'public' };
-  Object.keys(map).forEach(btnId => {
-    const btn = document.getElementById(btnId);
-    if(btn){
+} // end openBuyModal
+
+// Attach handlers to existing buttons; when clicked — open modal and auto-start with that tier
+function attachBuyButtons(){
+  const map = { seedBuy:'seed', earlyBuy:'early', publicBuy:'public' };
+  Object.keys(map).forEach(id=> {
+    const btn = document.getElementById(id);
+    if (btn) {
       btn.addEventListener('click', (e)=>{
         e.preventDefault();
-        handleBuy(map[btnId]);
+        openBuyModal({ autoTier: map[id] });
       });
     }
   });
 }
+attachBuyButtons();
 
-// Запускаем
-attachButtons();
-shortLog('GENZ buy script loaded — handlers attached (if buttons present).');
-
+log('Updated GENZ buy script attached.');
 </script>
-<!-- ========== GENZ Presale pay modal & logic ==========
-     Вставь этот блок перед </body>
-====================================================== -->
-<script type="module">
-/* GENZ buy modal:
-   - SOL (Phantom) — автоматический перевод с Memo (purchaseId)
-   - USDT (Polygon) / BTC — copy address
-   - Цена GENZ = $0.0001 (fixed as requested)
-*/
-import { Connection, PublicKey, SystemProgram, Transaction } from 'https://esm.sh/@solana/web3.js@1.77.0';
 
-// ----------------- CONFIG (подставь если нужно) -----------------
-const SOL_PROJECT_ADDRESS = new PublicKey('7Ton9ubUjbGX3bLrh1g2KBXCdBFjJQG8HDhDfboVwWFy'); // твой Solana
-const USDT_POLY_ADDRESS = '0x37D5675003ed3D97734aB92a9CEf8bD3F694531d'; // USDT (Polygon) — адрес, который дал
-const BTC_ADDRESS = 'bc1q9vdyrf5fs2yjkguewlg4cvzzccfpcctlxdmx6z'; // Bitcoin адрес
-const PRICE_PER_GENZ_USD = 0.0001; // фиксированная цена, как попросил
-const COINGECKO_SIMPLE_PRICE = 'https://api.coingecko.com/api/v3/simple/price?ids=solana,bitcoin&vs_currencies=usd';
-const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
-const connection = new Connection(RPC_ENDPOINT, 'confirmed');
-// ----------------------------------------------------------------
 
-// небольшой helper
-function uuidv4(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r=Math.random()*16|0; const v = c==='x'? r : (r&0x3|0x8); return v.toString(16); }); }
-function el(id){ return document.getElementById(id); }
-function createEl(tag, attrs={}, children=[]){
-  const d = document.createElement(tag);
-  Object.entries(attrs).forEach(([k,v]) => { if(k==='html'){ d.innerHTML = v } else if(k==='class'){ d.className = v } else d.setAttribute(k, v); });
-  (Array.isArray(children) ? children : [children]).forEach(c => { if(!c) return; typeof c === 'string' ? d.appendChild(document.createTextNode(c)) : d.appendChild(c); });
-  return d;
-}
 
-// ----------------- create modal -----------------
-function makeModal(){
-  if (document.getElementById('__genz_modal')) return; // уже есть
-  const overlay = createEl('div', { id: '__genz_modal', class: '__genz_modal' });
-  const style = createEl('style', { html: `
-    .__genz_modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; background: rgba(3,6,13,0.6); }
-    .__genz_modal_box{ width:520px; max-width:95%; background:#071025; border-radius:12px; padding:18px; color:#fff; box-shadow:0 12px 40px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.04); }
-    .__genz_row{ display:flex; gap:10px; margin-top:10px; align-items:center; }
-    .__genz_input{ width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:#fff }
-    .__genz_btn{ padding:10px 12px; border-radius:10px; background:linear-gradient(135deg,#ffd60a,#ffb300); color:#061220; font-weight:700; cursor:pointer; border:0 }
-    .__genz_secondary{ background:transparent; border:1px solid rgba(255,255,255,0.06); color: #fff; cursor:pointer; padding:8px 10px; border-radius:8px }
-    .__genz_small{ font-size:13px; color:rgba(255,255,255,0.75); margin-top:8px }
-    .__genz_close{ position:absolute; right:18px; top:14px; cursor:pointer; color:#ffd60a; font-weight:700 }
-    .__genz_warn{ color:#ffb3b3; margin-top:8px; font-size:13px }
-  `});
-  const box = createEl('div', { class: '__genz_modal_box' });
-  const close = createEl('div', { class: '__genz_close', html: '✕' });
-  const title = createEl('h3', { html: 'Buy GENZ — Presale' });
-  const subtitle = createEl('div', { class: '__genz_small', html: 'Выберите валюту и введите сумму в USD — система покажет, сколько GENZ вы получите.' });
-
-  // form elements
-  const currencySelect = createEl('select', { class: '__genz_input', id: '__genz_currency' }, [
-    createEl('option', { value: 'SOL' }, 'SOL (Solana)'),
-    createEl('option', { value: 'USDT' }, 'USDT (Polygon)'),
-    createEl('option', { value: 'BTC' }, 'BTC (Bitcoin)')
-  ]);
-
-  const usdInput = createEl('input', { class: '__genz_input', id: '__genz_usd', type:'number', placeholder:'Сумма в USD (напр. 10)', min:'0', step:'0.01' });
-  const orText = createEl('div', { class: '__genz_small', html: '— или введите сумму в выбранной валюте ниже —' });
-
-  const cryptoInput = createEl('input', { class: '__genz_input', id: '__genz_crypto', type:'number', placeholder:'Сумма в выбранной валюте (напр. 0.01 SOL)', min:'0', step:'any' });
-
-  const calcRow = createEl('div', { class: '__genz_row' });
-  const genzLabel = createEl('div', { html: 'GENZ you get:' });
-  const genzAmt = createEl('div', { id: '__genz_amt', html: '—', style: 'font-weight:800;margin-left:auto' });
-
-  const conversionRow = createEl('div', { class:'__genz_row' });
-  const convInfo = createEl('div', { id: '__genz_conv', class: '__genz_small', html: 'Курс: загрузка...' });
-
-  const actions = createEl('div', { class:'__genz_row', style:'justify-content:space-between;margin-top:14px' });
-  const paySOLBtn = createEl('button', { class:'__genz_btn', id:'__genz_pay_sol', type:'button' }, 'Pay with SOL (Phantom)');
-  const copyBtn = createEl('button', { class:'__genz_secondary', id:'__genz_copy', type:'button' }, 'Copy address (USDT / BTC)');
-
-  const infoNote = createEl('div', { class:'__genz_small', html: 'GENZ price = $' + PRICE_PER_GENZ_USD + ' / token. Токены будут начислены вручную после завершения presale.' });
-  const warn = createEl('div', { class:'__genz_warn', id:'__genz_warn', html: '' });
-
-  // assemble
-  box.appendChild(close);
-  box.appendChild(title);
-  box.appendChild(subtitle);
-  box.appendChild(createEl('div', { class:'__genz_row', style:'margin-top:12px' }, [createEl('div', null, 'Валюта:'), currencySelect]));
-  box.appendChild(createEl('div', { style:'margin-top:10px' }, [createEl('div', null, 'Сумма (USD):'), usdInput]));
-  box.appendChild(orText);
-  box.appendChild(createEl('div', { style:'margin-top:10px' }, [createEl('div', null, 'Сумма (crypto):'), cryptoInput]));
-  box.appendChild(calcRow);
-  calcRow.appendChild(genzLabel);
-  calcRow.appendChild(genzAmt);
-  box.appendChild(conversionRow);
-  conversionRow.appendChild(convInfo);
-  box.appendChild(actions);
-  actions.appendChild(paySOLBtn);
-  actions.appendChild(copyBtn);
-  box.appendChild(infoNote);
-  box.appendChild(warn);
-
-  overlay.appendChild(style);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  // close handlers
-  close.addEventListener('click', ()=> overlay.remove());
-  overlay.addEventListener('click', (e)=> { if(e.target === overlay) overlay.remove(); });
-
-  // live price fetch & reactive logic
-  let prices = { sol: null, bitcoin: null }; // USD
-  async function loadPrices(){
-    try {
-      const r = await fetch(COINGECKO_SIMPLE_PRICE);
-      const j = await r.json();
-      prices.sol = j.solana?.usd || null;
-      prices.bitcoin = j.bitcoin?.usd || null;
-      convInfo.textContent = `Prices: SOL ≈ $${prices.sol ?? 'n/a'}, BTC ≈ $${prices.bitcoin ?? 'n/a'}`;
-    } catch(e){
-      convInfo.textContent = 'Не удалось получить курсы (CoinGecko). Конвертация может быть некорректной.';
-      console.error('price load error', e);
-    }
-    recompute();
-  }
-  loadPrices();
-
-  function recompute(){
-    const usd = parseFloat(usdInput.value || '0');
-    const crypto = parseFloat(cryptoInput.value || '0');
-    const cur = currencySelect.value;
-    let usdEffective = usd;
-    // если ввели значение в crypto, переведём в USD
-    if (crypto > 0){
-      if (cur === 'SOL' && prices.sol) usdEffective = crypto * prices.sol;
-      else if (cur === 'BTC' && prices.bitcoin) usdEffective = crypto * prices.bitcoin;
-      else if (cur === 'USDT') usdEffective = crypto * 1; // USDT ~ $1
-      else usdEffective = 0;
-    }
-    // вычисляем GENZ
-    const genz = usdEffective > 0 ? Math.floor( (usdEffective / PRICE_PER_GENZ_USD) ) : 0;
-    genzAmt.textContent = genz.toLocaleString();
-    // показываем требуемую крипту при вводе USD
-    if (usd > 0){
-      if (cur === 'SOL' && prices.sol) convInfo.textContent = `Нужно ≈ ${(usd / prices.sol).toFixed(6)} SOL (курс $${prices.sol}).`;
-      else if (cur === 'BTC' && prices.bitcoin) convInfo.textContent = `Нужно ≈ ${(usd / prices.bitcoin).toFixed(6)} BTC (курс $${prices.bitcoin}).`;
-      else if (cur === 'USDT') convInfo.textContent = `Нужно ≈ ${usd.toFixed(2)} USDT (stable ~ $1).`;
-    }
-  }
-
-  usdInput.addEventListener('input', ()=>{ cryptoInput.value=''; recompute(); });
-  cryptoInput.addEventListener('input', ()=>{ usdInput.value=''; recompute(); });
-  currencySelect.addEventListener('change', ()=>{ usdInput.value=''; cryptoInput.value=''; recompute(); });
-
-  // Pay with SOL handler
-  paySOLBtn.addEventListener('click', async ()=>{
-    warn.textContent = '';
-    try {
-      const provider = window.solana && (window.solana.isPhantom ? window.solana : (window.solana.providers && window.solana.providers.find(p=>p.isPhantom)));
-      if(!provider) { warn.textContent = 'Phantom не найден. Попроси пользователя установить Phantom.'; return; }
-      if(!provider.isConnected){
-        await provider.connect();
-      }
-      const pubkey = provider.publicKey;
-      if(!pubkey){ warn.textContent = 'Не удалось получить публичный ключ кошелька.'; return; }
-
-      // определим сумму SOL
-      let usd = parseFloat(usdInput.value || '0');
-      let crypto = parseFloat(cryptoInput.value || '0');
-      let solAmount = 0;
-      if (crypto > 0) solAmount = crypto;
-      else if (usd > 0){
-        if (!prices.sol){ warn.textContent = 'Не удалось получить курс SOL. Попробуйте снова.'; return; }
-        solAmount = usd / prices.sol;
-      } else { warn.textContent = 'Введите сумму в USD или SOL.'; return; }
-
-      // генерим purchaseId
-      const purchaseId = uuidv4();
-
-      // создаём tx: transfer + memo
-      const lamports = Math.round(solAmount * 1e9);
-      const tx = new Transaction();
-      tx.add(SystemProgram.transfer({
-        fromPubkey: provider.publicKey,
-        toPubkey: SOL_PROJECT_ADDRESS,
-        lamports
-      }));
-      const memoProgramId = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-      tx.add({ keys: [], programId: memoProgramId, data: Buffer.from(purchaseId, 'utf8') });
-
-      const { blockhash } = await connection.getLatestBlockhash('finalized');
-      tx.recentBlockhash = blockhash;
-      tx.feePayer = provider.publicKey;
-
-      // Phantom: signAndSendTransaction preferred
-      let sig;
-      if (provider.signAndSendTransaction){
-        const signed = await provider.signAndSendTransaction(tx);
-        sig = signed.signature;
-        await connection.confirmTransaction(sig, 'confirmed');
-      } else if (provider.signTransaction){
-        const signedTx = await provider.signTransaction(tx);
-        const raw = signedTx.serialize();
-        sig = await connection.sendRawTransaction(raw);
-        await connection.confirmTransaction(sig, 'confirmed');
-      } else {
-        warn.textContent = 'Кошелёк не поддерживает необходимые методы.';
-        return;
-      }
-
-      // успех
-      warn.style.color = '#aaf06a';
-      warn.textContent = `Транзакция отправлена: ${sig}. Сохрани sig и purchaseId: ${purchaseId}`;
-      // (Опционально) здесь можно сделать POST на ваш бэкенд с {purchaseId, sig, wallet: provider.publicKey.toString(), usd, solAmount}
-    } catch(e){
-      console.error('pay sol error', e);
-      warn.style.color = '#ffb3b3';
-      warn.textContent = 'Ошибка при отправке транзакции: ' + (e.message || e.toString());
-    }
-  });
-
-  // Copy address handler (USDT / BTC)
-  copyBtn.addEventListener('click', async ()=>{
-    const cur = currencySelect.value;
-    if(cur === 'USDT'){
-      await navigator.clipboard.writeText(USDT_POLY_ADDRESS);
-      warn.style.color = '#aaf06a';
-      warn.textContent = 'USDT (Polygon) адрес скопирован в буфер: ' + USDT_POLY_ADDRESS + ' — отправьте USDT с вашего кошелька (Polygon network).';
-    } else if(cur === 'BTC'){
-      await navigator.clipboard.writeText(BTC_ADDRESS);
-      warn.style.color = '#aaf06a';
-      warn.textContent = 'BTC адрес скопирован в буфер: ' + BTC_ADDRESS + ' — отправьте BTC с вашего кошелька.';
-    } else {
-      await navigator.clipboard.writeText(SOL_PROJECT_ADDRESS.toString());
-      warn.style.color = '#aaf06a';
-      warn.textContent = 'SOL адрес скопирован: ' + SOL_PROJECT_ADDRESS.toString() + ' (или используйте кнопку Pay with SOL).';
-    }
-  });
-
-} // end makeModal
-
-// ----------------- attach to existing buttons -----------------
-function attachBuyHandlers(){
-  const map = { seedBuy: 'seed', earlyBuy: 'early', publicBuy: 'public' };
-  Object.keys(map).forEach(id=>{
-    const btn = document.getElementById(id);
-    if(btn) btn.addEventListener('click', (e)=>{ e.preventDefault(); makeModal(); });
-  });
-}
-attachBuyHandlers();
-
-// если кнопки динамические — можно повторно вызвать attachBuyHandlers() после динамики
-console.log('GENZ presale helper loaded: buy handlers attached (if buttons exist).');
-
-</script>
-<!-- ========== end GENZ script ========== -->
 
 </body>
 </html>
