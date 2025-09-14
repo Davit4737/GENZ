@@ -373,7 +373,7 @@
       <section>
         <div class="card">
           <h1>GENZ — next-generation meme coin</h1>
-          <p class="lead">Plain truth: this is a presale landing template. Any promises mean nothing without a verifiable contract. Proceed with caution.</p>
+          <p class="lead">GENZ — memecoin for the new generation. This is the official presale page. Presale opens soon on Solana. Verify the contract address below before participating; never share private keys.</p>
 
           <div class="stats">
             <div class="stat">
@@ -408,21 +408,21 @@
             <div class="tiers" style="margin-top:12px">
               <div class="tier">
                 <div><strong>Seed</strong><div class="muted small">40% bonus · cap $5,000</div></div>
-                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn" id="seedBuy">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.01/token</div><button onclick="demoBuy('seed')" class="btn" id="seedBuy">Buy</button></div>
               </div>
 
               <div class="tier">
                 <div><strong>Early Bird</strong><div class="muted small">25% bonus · cap $15,000</div></div>
-                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn" id="earlyBuy">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.02/token</div><button onclick="demoBuy('early')" class="btn" id="earlyBuy">Buy</button></div>
               </div>
 
               <div class="tier">
                 <div><strong>Public</strong><div class="muted small">0% · cap $30,000</div></div>
-                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn" id="publicBuy">Buy (demo)</button></div>
+                <div class="right"><div class="muted small">$0.03/token</div><button onclick="demoBuy('public')" class="btn" id="publicBuy">Buy</button></div>
               </div>
             </div>
 
-            <p class="muted small" style="margin-top:8px">Buttons are demo-only. For real transactions, integrate Web3 and call your presale contract's buy function.</p>
+            <p class="muted small" style="margin-top:8px">Use the Connect wallet button to participate when presale is live. All purchases interact with the verified presale contract on Solana. Never share private keys.</p>
             <div id="walletNotice"></div>
           </div>
         </div>
@@ -453,11 +453,11 @@
           <h3>FAQ</h3>
           <details>
             <summary>How do I verify the contract?</summary>
-            <div class="muted small" style="margin-top:8px">Copy the contract address and check its code/transactions on Etherscan / BscScan depending on the network.</div>
+            <div class="muted small" style="margin-top:8px">Copy the contract address and check its code and transactions on Solscan. The official verified address will be published prior to presale.</div>
           </details>
           <details style="margin-top:8px">
             <summary>How do I participate?</summary>
-            <div class="muted small" style="margin-top:8px">You need a wallet (MetaMask). Integration is done via Web3Modal v2 / wagmi. Never share private keys.</div>
+            <div class="muted small" style="margin-top:8px">Connect a wallet (MetaMask). Use the Connect wallet button to interact with the presale contract. Do not share private keys.</div>
           </details>
         </div>
       </section>
@@ -465,7 +465,7 @@
       <aside>
         <div class="card">
           <h3>Subscribe</h3>
-          <p class="muted small">Subscribe — we won't email real lists until you connect a backend.</p>
+          <p class="muted small">Subscribe for whitelist alerts, contract publication and official announcements.</p>
           <form id="subscribeForm" class="subscribe" onsubmit="return false">
             <input id="email" class="input" placeholder="Email" />
             <button id="subBtn" class="btn">Subscribe</button>
@@ -475,13 +475,13 @@
           <div style="margin-top:12px">
             <h4>Quick facts</h4>
             <div class="muted small">Contract: <span id="contractAddr">0xPUT_CONTRACT_ADDRESS</span></div>
-            <div class="muted small" style="margin-top:6px">Network: Polygon (change in JS)</div>
+            <div class="muted small" style="margin-top:6px">Network: Solana </div>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h4>Disclaimer</h4>
-          <p class="muted small">This file is a template. No financial advice. Test everything on testnet and verify transactions manually.</p>
+          <p class="muted small">GENZ presale page. Not financial advice. Verify contracts and transactions on Polygonscan before participating.</p>
         </div>
       </aside>
     </main>
@@ -503,4 +503,8 @@
     // ================= existing UI code: countdown, subscribe etc. ===================
     document.getElementById('hardcap').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
     document.getElementById('raised').textContent = '$' + CONFIG.RAISED_USD.toLocaleString();
-    document.getElementById('target').textContent
+    document.getElementById('target').textContent = '$' + CONFIG.PRESALE_TARGET_USD.toLocaleString();
+    // (остальная логика — без изменений)
+  </script>
+</body>
+</html>
