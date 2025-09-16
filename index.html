@@ -78,13 +78,9 @@
     nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
     nav#mainNav a.btn { color: #0b1220; }
 
-    /* MEDIA: hide non-buy nav items on small screens — STRONGER rule */
     @media (max-width: 900px) {
-      /* hide all nav links on mobile (including .btn in header) */
       nav#mainNav a { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
-      /* Keep nav container layout OK */
       nav#mainNav { justify-content: flex-end; }
-      /* floating Buy fallback visible on mobile */
       #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
     }
 
@@ -130,7 +126,6 @@
         </div>
       </div>
 
-      <!-- main nav: всегда видно на ПК, скрыто на мобильных -->
       <nav role="navigation" aria-label="Top navigation" id="mainNav">
         <a href="#tokenomics" class="nav-link">Tokenomics</a>
         <a href="#roadmap" class="nav-link">Roadmap</a>
@@ -139,18 +134,12 @@
         <a class="btn nav-link" href="#buy" id="navBuy">Buy</a>
       </nav>
 
-      <!-- social icons (header) -->
       <div class="socials" aria-hidden="false">
         <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ в X (Twitter)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1-.7.3-1.5.6-2.3.6z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1-.7.3-1.5.6-2.3.6z"/></svg>
         </a>
-
         <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ в Telegram">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
         </a>
       </div>
     </header>
@@ -187,7 +176,6 @@
             <div class="muted small">Presale status</div>
             <div class="countdown" id="countdown"><!-- JS fills --></div>
 
-            <!-- Simplified: single buy -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px">
               <div class="muted small">Current stage: <strong id="stageLabel">Presale</strong></div>
               <div style="display:flex;gap:10px;align-items:center">
@@ -201,6 +189,7 @@
           </div>
         </div>
 
+        <!-- tokenomics, roadmap, whitepaper, faq (unchanged) -->
         <div class="card" style="margin-top:16px" id="tokenomics">
           <h3>Tokenomics</h3>
           <p class="muted small">Transparency &gt; hype. Example allocation below.</p>
@@ -300,6 +289,9 @@
   <!-- floating fallback buy (visible on mobile) -->
   <button id="mobileFallbackBuy" type="button" aria-hidden="false">Buy</button>
 
+  <!-- load solana web3 (CDN) -->
+  <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
+
   <!-- Robust global script (no module imports) -->
   <script>
   (function(){
@@ -336,6 +328,10 @@
     // === YOUR SOL ADDRESS ===
     const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
 
+    // Connection: change 'devnet' for safe testing or 'mainnet-beta' for live
+    const NETWORK = 'mainnet-beta'; // change to 'devnet' while testing
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
+
     /* function to create the modal (global) */
     window.openBuyModal = function(opts){
       opts = opts || {};
@@ -355,7 +351,7 @@
       const title = document.createElement('h3'); title.textContent = 'Buy GENZ';
       box.appendChild(title);
       const desc = document.createElement('div'); desc.className='genz-small';
-      desc.textContent = 'Выберите валюту и сумму. Demo: Phantom link or copy address.';
+      desc.textContent = 'Выберите валюту и сумму. Demo: Phantom will prompt to sign and send transaction.';
       box.appendChild(desc);
 
       // currency toggle
@@ -431,47 +427,75 @@
         }
       });
 
-      // Open in Phantom link (universal) - keep for manual open
+      // Open in Phantom deep-link (manual fallback)
       openPhantomBtn.addEventListener('click', ()=>{
         if (curr !== 'SOL'){ resultLine.textContent = 'Open in Phantom для SOL только.'; return; }
         const usd = parseFloat(usdInput.value||0);
         const crypto = parseFloat(cryptoInput.value||0);
         let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
         if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
-        const solAddr = SOL_ADDRESS;
-        const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
-        // open the deep link so Phantom shows the transfer dialog
+        const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
         window.location.href = url;
       });
 
-      // Pay button: improved behavior:
+      // Pay: build real Solana transfer tx and ask Phantom to send it
       payBtn.addEventListener('click', async ()=>{
-        // determine amount
         const usd = parseFloat(usdInput.value||0);
         const crypto = parseFloat(cryptoInput.value||0);
         let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
         if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
 
-        // detect phantom provider
+        // detect provider
         const provider = (window.solana && (window.solana.isPhantom ? window.solana : (Array.isArray(window.solana && window.solana.providers) ? window.solana.providers.find(p=>p.isPhantom) : null))) || null;
 
-        const solAddr = SOL_ADDRESS;
-        const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
+        // lamports
+        const lamports = Math.round(solAmount * solanaWeb3.LAMPORTS_PER_SOL);
 
         if (provider && provider.isPhantom){
-          // connect (no sending) then offer the deep link — Phantom will open transfer UI
           try{
             resultLine.textContent = 'Подключаю Phantom...';
             await provider.connect();
-            resultLine.textContent = 'Phantom подключён (демо). Открою интерфейс перевода…';
-            // open transfer dialog via deep-link (this triggers Phantom UI on mobile/desktop)
-            window.location.href = url;
+
+            const fromPubkey = provider.publicKey;
+            if (!fromPubkey){
+              resultLine.textContent = 'Не удалось получить публичный ключ из Phantom.';
+              return;
+            }
+
+            resultLine.textContent = 'Формирую транзакцию...';
+
+            const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
+
+            // create transaction and transfer instruction
+            const tx = new solanaWeb3.Transaction().add(
+              solanaWeb3.SystemProgram.transfer({
+                fromPubkey: fromPubkey,
+                toPubkey: toPubkey,
+                lamports: lamports
+              })
+            );
+
+            tx.feePayer = fromPubkey;
+            const { blockhash } = await connection.getLatestBlockhash();
+            tx.recentBlockhash = blockhash;
+
+            resultLine.textContent = 'Открываю Phantom для подписи и отправки транзакции...';
+
+            // sendTransaction will prompt Phantom to sign and send
+            const txid = await provider.sendTransaction(tx, connection);
+
+            resultLine.textContent = 'Транзакция отправлена, ожидание подтверждения... txid: ' + txid;
+            await connection.confirmTransaction(txid, 'confirmed');
+
+            resultLine.textContent = 'Платёж подтверждён. txid: ' + txid;
           }catch(err){
-            resultLine.textContent = 'Не удалось подключиться к Phantom: ' + (err && err.message ? err.message : 'ошибка');
+            console.error(err);
+            resultLine.textContent = 'Ошибка: ' + (err && err.message ? err.message : String(err));
           }
         } else {
-          // fallback: open phantom deep link (mobile/desktop handler)
+          // fallback deep link if provider not found
           resultLine.textContent = 'Phantom не обнаружен — открою ссылку для оплаты.';
+          const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
           window.location.href = url;
         }
       });
@@ -539,7 +563,7 @@
       });
     }
 
-    // Whitepaper download and inline open (unchanged)
+    // Whitepaper download and inline open
     const whiteText = [
 "GENZ — White Paper (excerpt)",
 "",
@@ -585,7 +609,7 @@
       });
     }
 
-    console.log('Mobile nav hidden, Phantom deep-link uses provided SOL address');
+    console.log('Buy handlers installed — Phantom sendTransaction enabled (address set).');
 
   })();
   </script>
