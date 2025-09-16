@@ -42,8 +42,6 @@
     .bar-inner{height:100%;width:15%;background:linear-gradient(90deg,var(--yellow-1),var(--yellow-2));transition:width .9s}
     .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted-weak);margin-top:8px}
     .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .tiers{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-    .tier{display:flex;justify-content:space-between;align-items:center;padding:12px;background: rgba(3,6,13,0.45);border-radius:12px}
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;color:var(--muted-weak)}
     td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
     footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
@@ -74,20 +72,20 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding: 6px 0;
-      flex-wrap: nowrap; /* force single-line scrollable nav on narrow screens */
+      flex-wrap: nowrap;
     }
     nav#mainNav a { white-space: nowrap; color: #e6eef6; text-decoration: none; padding:8px 10px; border-radius:10px; transition: all .12s; }
     nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
     nav#mainNav a.btn { color: #0b1220; }
 
-    /* MEDIA: hide non-buy nav items on small screens */
+    /* MEDIA: hide non-buy nav items on small screens — STRONGER rule */
     @media (max-width: 900px) {
-      /* hide all nav links except .btn (Buy) on mobile */
-      nav#mainNav a:not(.btn) { display: none; }
-      /* keep the nav container visible so Buy stays */
+      /* hide all nav links on mobile (including .btn in header) */
+      nav#mainNav a { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
+      /* Keep nav container layout OK */
       nav#mainNav { justify-content: flex-end; }
       /* floating Buy fallback visible on mobile */
-      #mobileFallbackBuy { display: inline-flex; align-items:center; gap:8px; }
+      #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
     }
 
     /* socials in header */
@@ -96,13 +94,11 @@
     .socials a:hover { transform:translateY(-2px); background: rgba(255,255,255,0.04); }
     .socials svg { width:20px; height:20px; display:block; fill: #e6eef6; }
 
-    /* socials in aside block */
     .socials-side { display:flex; gap:8px; margin-top:10px; }
     .socials-side a { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; color:var(--muted-weak); font-size:13px; transition:all .12s; }
     .socials-side a:hover { background: rgba(255,255,255,0.03); color:#fff; }
     .socials-side svg { width:18px; height:18px; fill: #e6eef6; }
 
-    /* Floating Buy fallback */
     #mobileFallbackBuy {
       display: none;
       position: fixed;
@@ -134,7 +130,7 @@
         </div>
       </div>
 
-      <!-- main nav: всегда видно, touch-friendly -->
+      <!-- main nav: всегда видно на ПК, скрыто на мобильных -->
       <nav role="navigation" aria-label="Top navigation" id="mainNav">
         <a href="#tokenomics" class="nav-link">Tokenomics</a>
         <a href="#roadmap" class="nav-link">Roadmap</a>
@@ -264,7 +260,6 @@
           </form>
           <div id="subMsg" class="muted small" style="margin-top:8px"></div>
 
-          <!-- Social links inside aside -->
           <div style="margin-top:12px">
             <div class="socials-side" aria-hidden="false">
               <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ в X">
@@ -302,7 +297,7 @@
     </footer>
   </div>
 
-  <!-- floating fallback buy -->
+  <!-- floating fallback buy (visible on mobile) -->
   <button id="mobileFallbackBuy" type="button" aria-hidden="false">Buy</button>
 
   <!-- Robust global script (no module imports) -->
@@ -337,6 +332,9 @@
       el.style.zIndex = 20000;
       el.style.pointerEvents = 'auto';
     }
+
+    // === YOUR SOL ADDRESS ===
+    const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
 
     /* function to create the modal (global) */
     window.openBuyModal = function(opts){
@@ -422,7 +420,7 @@
         let addr = '';
         if (curr === 'USDT') addr = '0x...USDT';
         else if (curr === 'BTC') addr = 'bc1qexamplebtcaddress...';
-        else addr = 'ExampleSolAddress';
+        else addr = SOL_ADDRESS;
         try{
           await navigator.clipboard.writeText(addr);
           resultLine.textContent = 'Адрес скопирован в буфер.';
@@ -440,8 +438,9 @@
         const crypto = parseFloat(cryptoInput.value||0);
         let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
         if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
-        const solAddr = 'ExampleSolAddress';
+        const solAddr = SOL_ADDRESS;
         const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
+        // open the deep link so Phantom shows the transfer dialog
         window.location.href = url;
       });
 
@@ -456,26 +455,23 @@
         // detect phantom provider
         const provider = (window.solana && (window.solana.isPhantom ? window.solana : (Array.isArray(window.solana && window.solana.providers) ? window.solana.providers.find(p=>p.isPhantom) : null))) || null;
 
+        const solAddr = SOL_ADDRESS;
+        const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
+
         if (provider && provider.isPhantom){
-          // try to connect (no sending)
+          // connect (no sending) then offer the deep link — Phantom will open transfer UI
           try{
             resultLine.textContent = 'Подключаю Phantom...';
             await provider.connect();
-            resultLine.textContent = 'Phantom подключён (демо). Нажмите "Open in Phantom" для завершения оплаты.';
-            // attach prepared deep link to openPhantomBtn for convenience
-            const solAddr = 'ExampleSolAddress';
-            const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
-            openPhantomBtn.onclick = function(){ window.location.href = url; };
-            openPhantomBtn.style.display = 'inline-block';
+            resultLine.textContent = 'Phantom подключён (демо). Открою интерфейс перевода…';
+            // open transfer dialog via deep-link (this triggers Phantom UI on mobile/desktop)
+            window.location.href = url;
           }catch(err){
             resultLine.textContent = 'Не удалось подключиться к Phantom: ' + (err && err.message ? err.message : 'ошибка');
           }
         } else {
           // fallback: open phantom deep link (mobile/desktop handler)
-          const solAddr = 'ExampleSolAddress';
-          const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(solAddr) + '&amount=' + encodeURIComponent(solAmount);
           resultLine.textContent = 'Phantom не обнаружен — открою ссылку для оплаты.';
-          // redirect to phantom deep link
           window.location.href = url;
         }
       });
@@ -589,7 +585,7 @@
       });
     }
 
-    console.log('Buy handlers installed — mobile nav hiding applied');
+    console.log('Mobile nav hidden, Phantom deep-link uses provided SOL address');
 
   })();
   </script>
