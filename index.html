@@ -8,9 +8,6 @@
   <meta name="robots" content="noindex,nofollow" />
 
   <script>
-  /**
-   * Сделает круглый favicon из твоего изображения.
-   */
   (function makeRoundedFavicon(src = './img/IMG_0605.PNG', size = 128, border = 4, borderColor = '#88A7C8') {
     function setFaviconDataURL(dataUrl) {
       let link = document.querySelector("link[rel~='icon']");
@@ -61,6 +58,8 @@
       --card-bg: rgba(6,10,20,0.62);
       --yellow-1:#ffd60a; --yellow-2:#ffb300;
       --maxw:1100px;
+      --accent: #7dd3fc;
+      --panel-bg: #071025;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -95,15 +94,33 @@
     footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
     .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.25);color:#fff;flex:1}
     @media(max-width:600px){h1{font-size:22px}.logo{width:64px;height:64px}}
+
     /* modal styles minimal */
     .genz-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:9999}
-    .genz-modal{width:520px;max-width:95%;background:#071025;border-radius:12px;padding:18px;color:#fff;position:relative;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+    .genz-modal{width:520px;max-width:95%;background:var(--panel-bg);border-radius:12px;padding:18px;color:#fff;position:relative;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
     .genz-close{position:absolute;right:12px;top:8px;cursor:pointer;color:#ffd60a;font-weight:700}
     .genz-input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;margin-top:8px}
     .genz-btn{padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#ffd60a,#ffb300);border:0;cursor:pointer;font-weight:700}
     .genz-secondary{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#fff;margin-left:8px}
     .genz-small{font-size:13px;color:rgba(255,255,255,0.75);margin-top:8px}
     .genz-warn{margin-top:8px;font-size:13px;color:#ffb3b3}
+
+    /* NEW: currency toggle */
+    .currency-toggle{display:flex;gap:8px;margin-top:8px}
+    .currency-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6;cursor:pointer}
+    .currency-toggle button.active{background:#07263a;color:#fff;border-color:rgba(125,211,252,0.28);box-shadow:0 4px 14px rgba(7,38,58,0.6)}
+    .info-line{color:var(--muted-weak);margin-top:10px}
+
+    /* Mobile nav/burger */
+    .burger{display:none;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+    @media(max-width:900px){
+      nav{display:none}
+      .burger{display:inline-flex}
+      header{align-items:center}
+    }
+    .mobile-nav{position:fixed;right:14px;top:62px;background:var(--panel-bg);border-radius:10px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:60}
+    .mobile-nav.open{display:block}
+    .mobile-nav a{display:block;padding:8px 10px;color:var(--muted-weak);text-decoration:none;border-radius:6px}
   </style>
 </head>
 <body>
@@ -121,12 +138,22 @@
         </div>
       </div>
 
+      <!-- desktop nav -->
       <nav role="navigation" aria-label="Top navigation">
         <a href="#tokenomics">Tokenomics</a>
         <a href="#roadmap">Roadmap</a>
         <a href="#faq">FAQ</a>
         <a class="btn" href="#buy">Buy</a>
       </nav>
+
+      <!-- burger for mobile -->
+      <button class="burger" id="burgerBtn" aria-label="menu" aria-expanded="false">☰</button>
+      <div class="mobile-nav" id="mobileNav" aria-hidden="true">
+        <a href="#tokenomics">Tokenomics</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn" href="#buy" id="mobileBuyBtn">Buy</a>
+      </div>
     </header>
 
     <main class="grid">
@@ -361,37 +388,51 @@
     }catch(e){ console.warn('execCommand copy failed', e); return false; }
   }
 
-  // build modal
-  function openBuyModal({ autoTier=null } = {}){
+  // build modal (updated: custom currency toggle, mobile-friendly events, Phantom universal link)
+  function openBuyModal({ autoTier=null } = {}) {
     if (document.getElementById('__genz_modal')) return;
     const overlay = document.createElement('div'); overlay.className = 'genz-modal-overlay'; overlay.id='__genz_modal';
     const box = document.createElement('div'); box.className = 'genz-modal';
     const close = document.createElement('div'); close.className='genz-close'; close.textContent='✕'; close.onclick = ()=> overlay.remove();
     const title = document.createElement('h3'); title.textContent = 'Buy GENZ';
     const desc = document.createElement('div'); desc.className='genz-small'; desc.textContent = `GENZ price = $${PRICE_PER_GENZ_USD} / token. Токены начисляются вручную после пресейла.`;
-    const select = document.createElement('select'); select.className='genz-input';
-    ['SOL','USDT','BTC'].forEach(c=> select.appendChild(new Option(c,c)));
-    select.style.marginTop='8px';
+    // currency toggle (custom) to avoid native select white-on-white on some phones
+    const currencyToggle = document.createElement('div'); currencyToggle.className = 'currency-toggle';
+    const btnSOL = document.createElement('button'); btnSOL.type='button'; btnSOL.textContent='SOL'; btnSOL.dataset.currency='SOL';
+    const btnUSDT = document.createElement('button'); btnUSDT.type='button'; btnUSDT.textContent='USDT'; btnUSDT.dataset.currency='USDT';
+    const btnBTC = document.createElement('button'); btnBTC.type='button'; btnBTC.textContent='BTC'; btnBTC.dataset.currency='BTC';
+    currencyToggle.appendChild(btnSOL); currencyToggle.appendChild(btnUSDT); currencyToggle.appendChild(btnBTC);
+
     const usdInput = document.createElement('input'); usdInput.className='genz-input'; usdInput.type='number'; usdInput.placeholder='Сумма в USD (напр. 10)';
     const cryptoInput = document.createElement('input'); cryptoInput.className='genz-input'; cryptoInput.type='number'; cryptoInput.placeholder='Либо сумма в крипто (напр. 0.01)';
-    const infoLine = document.createElement('div'); infoLine.className='genz-small'; infoLine.textContent='Загрузка курсов...';
+    const infoLine = document.createElement('div'); infoLine.className='info-line'; infoLine.textContent='Загрузка курсов...';
     const resultLine = document.createElement('div'); resultLine.style.fontWeight='700'; resultLine.style.marginTop='8px'; resultLine.textContent='GENZ: —';
     const payRow = document.createElement('div'); payRow.style.marginTop='12px';
     const btnPay = document.createElement('button'); btnPay.className='genz-btn'; btnPay.textContent='Pay with SOL (Phantom)';
+    const btnOpenPhantom = document.createElement('button'); btnOpenPhantom.className='genz-secondary'; btnOpenPhantom.textContent='Open in Phantom';
     const btnCopy = document.createElement('button'); btnCopy.className='genz-secondary'; btnCopy.textContent='Copy address (USDT/BTC)';
-    payRow.appendChild(btnPay); payRow.appendChild(btnCopy);
+    payRow.appendChild(btnPay); payRow.appendChild(btnOpenPhantom); payRow.appendChild(btnCopy);
 
     box.appendChild(close); box.appendChild(title); box.appendChild(desc);
-    box.appendChild(select); box.appendChild(usdInput); box.appendChild(cryptoInput);
+    box.appendChild(currencyToggle);
+    box.appendChild(usdInput); box.appendChild(cryptoInput);
     box.appendChild(infoLine); box.appendChild(resultLine); box.appendChild(payRow);
     overlay.appendChild(box); document.body.appendChild(overlay);
 
+    // state
     let prices = { sol:null, btc:null };
+    let currentCurrency = 'SOL';
+    function setActiveCurrency(c){
+      currentCurrency = c;
+      [btnSOL,btnUSDT,btnBTC].forEach(b=> b.classList.toggle('active', b.dataset.currency===c));
+      recompute();
+      // update UI lines (example: infoLine already shows courses)
+    }
     async function refreshPrices(){ prices = await loadPrices(); infoLine.textContent = `Курсы: SOL ≈ $${prices.sol ?? 'n/a'}, BTC ≈ $${prices.btc ?? 'n/a'}`; recompute(); }
     refreshPrices();
 
     function recompute(){
-      const cur = select.value;
+      const cur = currentCurrency;
       const usd = parseFloat(usdInput.value||'0');
       const crypto = parseFloat(cryptoInput.value||'0');
       let usdEffective = usd;
@@ -402,22 +443,47 @@
         else usdEffective = 0;
       }
       const genz = usdEffective>0 ? Math.floor(usdEffective / PRICE_PER_GENZ_USD) : 0;
-      resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${usdEffective.toFixed(2)})`;
+      resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${usdEffective.toFixed(2)}) — Валюта: ${cur}`;
     }
+
+    // currency button handlers (touch/click/pointer)
+    [btnSOL,btnUSDT,btnBTC].forEach(b=>{
+      const handler = (ev) => { ev.preventDefault(); setActiveCurrency(b.dataset.currency); };
+      b.addEventListener('click', handler);
+      b.addEventListener('touchend', handler);
+      b.addEventListener('pointerdown', handler);
+    });
 
     usdInput.oninput = ()=> { cryptoInput.value=''; recompute(); };
     cryptoInput.oninput = ()=> { usdInput.value=''; recompute(); };
-    select.onchange = ()=> { usdInput.value=''; cryptoInput.value=''; recompute(); };
 
-    if (autoTier && TIER_USD[autoTier]) { usdInput.value = TIER_USD[autoTier]; recompute(); setTimeout(()=> tryAutoPay(select.value, usdInput, cryptoInput, resultLine), 350); }
+    if (autoTier && TIER_USD[autoTier]) { usdInput.value = TIER_USD[autoTier]; setActiveCurrency('SOL'); recompute(); setTimeout(()=> tryAutoPay(currentCurrency, usdInput, cryptoInput, resultLine), 350); }
 
-    btnPay.addEventListener('click', async ()=> { await tryAutoPay(select.value, usdInput, cryptoInput, resultLine); });
+    // pay actions
+    btnPay.addEventListener('click', async ()=> { await tryAutoPay(currentCurrency, usdInput, cryptoInput, resultLine); });
+    btnPay.addEventListener('touchend', async (e)=>{ e.preventDefault(); await tryAutoPay(currentCurrency, usdInput, cryptoInput, resultLine); });
+
+    btnOpenPhantom.addEventListener('click', async ()=>{
+      // open Phantom universal link with demo amount if SOL selected
+      if (currentCurrency !== 'SOL') { resultLine.textContent = 'Open in Phantom доступен только для SOL.'; return; }
+      let usd = parseFloat(usdInput.value||'0');
+      let crypto = parseFloat(cryptoInput.value||'0');
+      let solAmount = 0;
+      if (crypto>0) solAmount = crypto;
+      else if (usd>0 && prices.sol) solAmount = usd / prices.sol;
+      else { resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
+      // build universal link (works on mobile to open Phantom app)
+      const phantomUrl = `https://phantom.app/ul/transfer?address=${SOL_PROJECT_ADDRESS.toString()}&amount=${encodeURIComponent(solAmount)}`;
+      // try open
+      window.location.href = phantomUrl;
+    });
+    btnOpenPhantom.addEventListener('touchend', (e)=>{ e.preventDefault(); btnOpenPhantom.click(); });
+
     btnCopy.addEventListener('click', async ()=>{
-      const cur = select.value;
-      if (cur === 'USDT'){
+      if (currentCurrency === 'USDT'){
         const ok = await robustCopy(USDT_POLY_ADDRESS);
         resultLine.textContent = ok ? 'USDT (Polygon) адрес скопирован.' : 'Не удалось скопировать адрес. Скопируй вручную: ' + USDT_POLY_ADDRESS;
-      } else if (cur === 'BTC'){
+      } else if (currentCurrency === 'BTC'){
         const ok = await robustCopy(BTC_ADDRESS);
         resultLine.textContent = ok ? 'BTC адрес скопирован.' : 'Не удалось скопировать адрес. Скопируй вручную: ' + BTC_ADDRESS;
       } else {
@@ -428,9 +494,9 @@
 
     async function tryAutoPay(cur, usdInputEl, cryptoInputEl, resultEl){
       try{
-        if (cur !== 'SOL') { resultEl.textContent = 'Pay with SOL доступен только для SOL. Для других валют — копируйте адрес.'; return; }
+        if (cur !== 'SOL') { resultEl.textContent = 'Pay with SOL доступен только для SOL. Для других валют — копируйте адрес или используйте custodial flow.'; return; }
         const provider = getPhantomProvider();
-        if (!provider) { resultEl.textContent = 'Phantom не найден. Попросите пользователя установить Phantom.'; return; }
+        if (!provider) { resultEl.textContent = 'Phantom не найден. Нажмите "Open in Phantom" или скопируйте адрес.'; return; }
         if (!provider.isConnected) { try { await provider.connect(); } catch(e){ resultEl.textContent = 'Подключение кошелька отменено.'; return; } }
         const usd = parseFloat(usdInputEl.value || '0');
         const crypto = parseFloat(cryptoInputEl.value || '0');
@@ -445,7 +511,7 @@
         resultEl.textContent = 'Создаю и подписываю транзакцию...';
         const sig = await createAndSendSolTx(provider, solAmount, purchaseId);
         resultEl.textContent = `Транзакция отправлена: ${sig}. purchaseId: ${purchaseId}`;
-        // Здесь можно POST на бэкенд: { purchaseId, sig, wallet: provider.publicKey.toString(), usd, solAmount }
+        // POST to backend here if you have one
       } catch(err){
         console.error('autoPay err', err);
         resultEl.textContent = 'Ошибка: ' + (err.message || err.toString());
@@ -453,22 +519,37 @@
     }
   } // end openBuyModal
 
-  // attach to page buttons
+  // attach to page buttons (with pointer/touch fallback)
   function attachBuyButtons(){
     const map = { seedBuy:'seed', earlyBuy:'early', publicBuy:'public' };
     Object.keys(map).forEach(id=> {
       const btn = document.getElementById(id);
       if (btn) {
-        btn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          openBuyModal({ autoTier: map[id] });
-        });
-        // mobile friendly: ensure touchend triggers
-        btn.addEventListener('touchend', (e)=> { e.preventDefault(); openBuyModal({ autoTier: map[id] }); });
+        const handler = (e) => { e.preventDefault(); openBuyModal({ autoTier: map[id] }); };
+        btn.addEventListener('click', handler);
+        btn.addEventListener('touchend', handler);
+        btn.addEventListener('pointerdown', (ev)=>{ ev.preventDefault(); /* reduce latency on mobile */ });
       }
     });
+    // mobile header buy button
+    const mobileBuyBtn = document.getElementById('mobileBuyBtn');
+    if (mobileBuyBtn){
+      const handler = (e)=>{ e.preventDefault(); openBuyModal({ autoTier: 'public' }); };
+      mobileBuyBtn.addEventListener('click', handler);
+      mobileBuyBtn.addEventListener('touchend', handler);
+    }
   }
   attachBuyButtons();
+
+  // burger mobile nav
+  (function setupMobileNav(){
+    const burger = document.getElementById('burgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (!burger || !mobileNav) return;
+    const toggle = (ev) => { ev.preventDefault(); const open = mobileNav.classList.toggle('open'); burger.setAttribute('aria-expanded', open ? 'true' : 'false'); mobileNav.setAttribute('aria-hidden', open ? 'false' : 'true'); };
+    burger.addEventListener('click', toggle);
+    burger.addEventListener('touchend', (e)=>{ e.preventDefault(); toggle(e); });
+  })();
 
   // subscribe form minimal
   document.getElementById('subscribeForm').addEventListener('submit', (e)=>{
@@ -476,7 +557,6 @@
     const email = document.getElementById('email').value.trim();
     if (!email) { document.getElementById('subMsg').textContent = 'Введите email.'; return; }
     document.getElementById('subMsg').textContent = 'Подписка принята (заглушка).';
-    // Тут можно отправить на API почту
   });
 
   console.log('GENZ presale script loaded');
