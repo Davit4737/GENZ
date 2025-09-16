@@ -6,7 +6,6 @@
   <title>GENZ — Presale</title>
   <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
   <meta name="robots" content="noindex,nofollow" />
-
   <style>
     :root{
       --bg1:#0f1724; --muted-weak:rgba(255,255,255,0.60);
@@ -329,7 +328,7 @@
     const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
 
     // Connection: change 'devnet' for safe testing or 'mainnet-beta' for live
-    const NETWORK = 'mainnet-beta'; // change to 'devnet' while testing
+    const NETWORK = 'mainnet-beta'; // <-- set to 'devnet' while testing
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
 
     /* function to create the modal (global) */
@@ -351,7 +350,7 @@
       const title = document.createElement('h3'); title.textContent = 'Buy GENZ';
       box.appendChild(title);
       const desc = document.createElement('div'); desc.className='genz-small';
-      desc.textContent = 'Выберите валюту и сумму. Demo: Phantom will prompt to sign and send transaction.';
+      desc.textContent = 'Выберите валюту и сумму. Phantom будет предложен для подписи и отправки транзакции.';
       box.appendChild(desc);
 
       // currency toggle
@@ -445,7 +444,7 @@
         let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
         if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
 
-        // detect provider
+        // detect provider (Phantom)
         const provider = (window.solana && (window.solana.isPhantom ? window.solana : (Array.isArray(window.solana && window.solana.providers) ? window.solana.providers.find(p=>p.isPhantom) : null))) || null;
 
         // lamports
@@ -475,25 +474,49 @@
               })
             );
 
+            // set fee payer & recent blockhash
             tx.feePayer = fromPubkey;
-            const { blockhash } = await connection.getLatestBlockhash();
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
             tx.recentBlockhash = blockhash;
 
             resultLine.textContent = 'Открываю Phantom для подписи и отправки транзакции...';
 
-            // sendTransaction will prompt Phantom to sign and send
-            const txid = await provider.sendTransaction(tx, connection);
+            // Try provider.sendTransaction (recommended) or fallback to sign & send
+            if (typeof provider.sendTransaction === 'function'){
+              // provider.sendTransaction will open Phantom UI to sign+send
+              const signature = await provider.sendTransaction(tx, connection);
+              resultLine.innerHTML = 'Транзакция отправлена, ожидание подтверждения... txid: <code>' + signature + '</code>';
+              // construct explorer link
+              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+              // wait confirmation
+              await connection.confirmTransaction(signature, 'confirmed');
+              resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+            } else if (typeof provider.signAndSendTransaction === 'function'){
+              const signed = await provider.signAndSendTransaction(tx);
+              const signature = signed && (signed.signature || signed);
+              resultLine.innerHTML = 'Транзакция отправлена, ожидание подтверждения... txid: <code>' + signature + '</code>';
+              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+              await connection.confirmTransaction(signature, 'confirmed');
+              resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+            } else if (typeof provider.signTransaction === 'function'){
+              // sign locally and send raw
+              const signedTx = await provider.signTransaction(tx);
+              const raw = signedTx.serialize();
+              const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
+              resultLine.innerHTML = 'Транзакция отправлена, ожидание подтверждения... txid: <code>' + signature + '</code>';
+              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+              await connection.confirmTransaction(signature, 'confirmed');
+              resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+            } else {
+              resultLine.textContent = 'Phantom установлен, но не поддерживает нужные методы. Используйте кнопку "Open in Phantom" или deeplink.';
+            }
 
-            resultLine.textContent = 'Транзакция отправлена, ожидание подтверждения... txid: ' + txid;
-            await connection.confirmTransaction(txid, 'confirmed');
-
-            resultLine.textContent = 'Платёж подтверждён. txid: ' + txid;
           }catch(err){
             console.error(err);
             resultLine.textContent = 'Ошибка: ' + (err && err.message ? err.message : String(err));
           }
         } else {
-          // fallback deep link if provider not found
+          // fallback deep link if provider not found (mobile / no extension)
           resultLine.textContent = 'Phantom не обнаружен — открою ссылку для оплаты.';
           const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
           window.location.href = url;
