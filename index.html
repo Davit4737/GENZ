@@ -1,127 +1,192 @@
-<!-- MOBILE FIX: robust tap handlers + fallback floating Buy button -->
-<style>
-  /* повышаем приоритет клика для кнопок Buy на мобильных */
-  .btn { position: relative; z-index: 1000; -webkit-tap-highlight-color: rgba(0,0,0,0.0); }
-  /* плавающая кнопка (фолбэк) */
-  #mobileFallbackBuy {
-    display: none;
-    position: fixed;
-    right: 14px;
-    bottom: 18px;
-    z-index: 12000;
-    background: linear-gradient(135deg,#ffd60a,#ffb300);
-    color:#071025;
-    padding: 12px 14px;
-    border-radius: 14px;
-    font-weight:800;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-    border: none;
-  }
-  @media(max-width:900px){
-    #mobileFallbackBuy { display: inline-flex; align-items:center; gap:8px; }
-  }
-</style>
-
-<button id="mobileFallbackBuy" aria-hidden="false" type="button">Buy</button>
-
-<script>
-(function(){
-  // helper to add touch/click handlers reliably
-  function addTap(el, handler){
-    if(!el) return;
-    // prevent duplicate
-    if (el.__tap_installed) return;
-    el.__tap_installed = true;
-
-    const wrapped = function(e){
-      try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
-      handler(e);
-    };
-
-    // Non-passive so preventDefault works on touchend on mobile browsers that respect passive option
-    try {
-      el.addEventListener('touchend', wrapped, {passive:false});
-    } catch (err) {
-      // older browsers
-      el.addEventListener('touchend', wrapped, false);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GENZ Presale</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
     }
-    el.addEventListener('pointerup', wrapped, {passive:false});
-    el.addEventListener('click', wrapped, {passive:false});
-  }
-
-  // Ensure buttons are visible & clickable: bump z-index & pointerEvents
-  ['seedBuy','earlyBuy','publicBuy','navBuy'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el){
-      el.style.position = 'relative';
-      el.style.zIndex = 1000;
-      el.style.pointerEvents = 'auto';
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: #111;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-  });
-
-  // Primary handlers: openBuyModal with correct tier
-  const tierMap = { seedBuy:'seed', earlyBuy:'early', publicBuy:'public' };
-  Object.keys(tierMap).forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    addTap(el, function(ev){
-      // defensive: ensure function exists
-      if (typeof openBuyModal === 'function') openBuyModal({ autoTier: tierMap[id] });
-      else {
-        // fallback: scroll to buy block
-        const target = document.getElementById('buy');
-        if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
-      }
-    });
-  });
-
-  // nav Buy
-  const navBuy = document.getElementById('navBuy');
-  if (navBuy) addTap(navBuy, function(ev){
-    if (typeof openBuyModal === 'function') openBuyModal({ autoTier: null });
-    else {
-      const target = document.getElementById('buy');
-      if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+    .logo {
+      font-weight: 800;
+      font-size: 20px;
+      color: #ffd60a;
     }
-  });
-
-  // Fallback floating buy on mobile
-  const mobileBtn = document.getElementById('mobileFallbackBuy');
-  addTap(mobileBtn, function(){
-    if (typeof openBuyModal === 'function') openBuyModal({ autoTier: null });
-    else {
-      const target = document.getElementById('buy');
-      if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+    nav ul {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 24px;
     }
-  });
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    nav ul li a:hover {
+      color: #ffd60a;
+    }
+    .hero {
+      padding: 80px 24px;
+      text-align: center;
+      background: linear-gradient(135deg, #111, #222);
+    }
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      background: linear-gradient(135deg,#ffd60a,#ffb300);
+      color:#071025;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+      transition: 0.2s;
+      -webkit-tap-highlight-color: rgba(0,0,0,0.0);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    section {
+      padding: 60px 24px;
+      text-align: center;
+    }
+    footer {
+      padding: 30px;
+      text-align: center;
+      background: #111;
+      color: #aaa;
+    }
+    /* Floating Buy fallback */
+    #mobileFallbackBuy {
+      display: none;
+      position: fixed;
+      right: 14px;
+      bottom: 18px;
+      z-index: 12000;
+      background: linear-gradient(135deg,#ffd60a,#ffb300);
+      color:#071025;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight:800;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+      border: none;
+    }
+    @media(max-width:900px){
+      #mobileFallbackBuy { display: inline-flex; align-items:center; gap:8px; }
+      nav ul { flex-wrap: wrap; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">GENZ</div>
+    <nav>
+      <ul>
+        <li><a href="#tokenomics">Tokenomics</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><button class="btn" id="navBuy">Buy</button></li>
+      </ul>
+    </nav>
+  </header>
 
-  // Extra failsafe: delegate touchend on document to catch taps that might be swallowed by overlays.
-  // If user taps near where a Buy button is, attempt to open modal based on coordinates.
-  document.addEventListener('touchend', function(e){
-    // only if no modal currently open
-    if (document.getElementById('__genz_modal')) return;
-    const touch = (e.changedTouches && e.changedTouches[0]) || null;
-    if(!touch) return;
-    const x = touch.clientX, y = touch.clientY;
-    // check if touch landed inside a Buy button bounding rect even if event didn't target it
-    ['seedBuy','earlyBuy','publicBuy','navBuy'].forEach(id=>{
-      const el = document.getElementById(id);
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      // pad the rect a bit (10px) to be more tolerant
-      if (x >= r.left-10 && x <= r.right+10 && y >= r.top-10 && y <= r.bottom+10){
-        // simulate tap
-        if (typeof openBuyModal === 'function') {
-          openBuyModal({ autoTier: (id==='navBuy' ? null : (id==='seedBuy'?'seed': id==='earlyBuy'?'early':'public')) });
-        } else {
-          const target = document.getElementById('buy');
-          if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+  <div class="hero">
+    <h1>GENZ Token Presale</h1>
+    <p>Be early. Be bold. Be GENZ.</p>
+    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn" id="seedBuy">Seed Buy</button>
+      <button class="btn" id="earlyBuy">Early Bird Buy</button>
+      <button class="btn" id="publicBuy">Public Buy</button>
+    </div>
+  </div>
+
+  <section id="tokenomics">
+    <h2>Tokenomics</h2>
+    <p>Details about GENZ token distribution...</p>
+  </section>
+
+  <section id="roadmap">
+    <h2>Roadmap</h2>
+    <p>Our plans for the future...</p>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <p>Answers to common questions...</p>
+  </section>
+
+  <footer>
+    <p>© 2025 GENZ Token. All rights reserved.</p>
+  </footer>
+
+  <!-- Fallback floating buy button -->
+  <button id="mobileFallbackBuy" type="button">Buy</button>
+
+  <script>
+    function openBuyModal(opts){
+      alert("Modal opened: " + (opts && opts.autoTier ? opts.autoTier : "default"));
+    }
+
+    (function(){
+      function addTap(el, handler){
+        if(!el) return;
+        if (el.__tap_installed) return;
+        el.__tap_installed = true;
+        const wrapped = function(e){
+          try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+          handler(e);
+        };
+        try {
+          el.addEventListener('touchend', wrapped, {passive:false});
+        } catch (err) {
+          el.addEventListener('touchend', wrapped, false);
         }
+        el.addEventListener('pointerup', wrapped, {passive:false});
+        el.addEventListener('click', wrapped, {passive:false});
       }
-    });
-  }, {passive:true});
 
-  // small console hint
-  console.log('Mobile tap handlers installed. If Buy still not opening — пришли модель телефона/браузера, я дам точную правку.');
-})();
-</script>
+      const tierMap = { seedBuy:'seed', earlyBuy:'early', publicBuy:'public' };
+      Object.keys(tierMap).forEach(id=>{
+        const el = document.getElementById(id);
+        if(!el) return;
+        addTap(el, function(){
+          openBuyModal({ autoTier: tierMap[id] });
+        });
+      });
+
+      addTap(document.getElementById('navBuy'), function(){
+        openBuyModal({ autoTier: null });
+      });
+
+      addTap(document.getElementById('mobileFallbackBuy'), function(){
+        openBuyModal({ autoTier: null });
+      });
+
+      console.log("Tap handlers active ✅");
+    })();
+  </script>
+</body>
+</html>
