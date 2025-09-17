@@ -291,7 +291,6 @@
   <!-- load solana web3 (CDN) -->
   <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
 
-  <!-- Robust global script (no module imports) -->
   <script>
   (function(){
 
@@ -328,7 +327,7 @@
     const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
 
     // Connection: change 'devnet' for safe testing or 'mainnet-beta' for live
-    const NETWORK = 'mainnet-beta'; // <-- set to 'devnet' while testing
+    const NETWORK = 'mainnet-beta'; // change to 'devnet' while testing
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
 
     /* function to create the modal (global) */
@@ -343,7 +342,11 @@
 
       // close button
       const close = document.createElement('div'); close.className='genz-close'; close.textContent='✕';
-      addTap(close, ()=> overlay.remove());
+      addTap(close, function(){
+        // clear interval if exists and remove modal
+        if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+        overlay.remove();
+      });
       box.appendChild(close);
 
       // title/desc
@@ -381,10 +384,37 @@
 
       document.body.appendChild(overlay);
 
-      // state and dummy rates
+      // --- LIVE RATES: CoinGecko ---
       let rates = { sol: 25.0, btc: 60000.0, usdt: 1.0 };
-      infoLine.textContent = `Курсы (demo): SOL ≈ $${rates.sol}, BTC ≈ $${rates.btc}`;
+      let ratesFetched = false;
+      const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=solana,bitcoin,tether&vs_currencies=usd';
 
+      async function fetchRatesAndUpdateUI(){
+        try {
+          const resp = await fetch(COINGECKO_URL);
+          if (!resp.ok) throw new Error('API ' + resp.status);
+          const data = await resp.json();
+          if (data && data.solana && data.bitcoin && data.tether) {
+            rates.sol = Number(data.solana.usd) || rates.sol;
+            rates.btc = Number(data.bitcoin.usd) || rates.btc;
+            rates.usdt = Number(data.tether.usd) || rates.usdt;
+            ratesFetched = true;
+            infoLine.textContent = `Курсы: SOL ≈ $${rates.sol.toFixed(2)}, BTC ≈ $${rates.btc.toFixed(2)}, USDT ≈ $${rates.usdt.toFixed(2)}`;
+          } else {
+            throw new Error('unexpected API response');
+          }
+        } catch (err) {
+          console.warn('Failed to fetch rates:', err);
+          infoLine.textContent = `Курсы: недоступны, показаны примерные значения (demo).`;
+        }
+        recompute();
+      }
+
+      // initial fetch + periodic refresh
+      fetchRatesAndUpdateUI();
+      overlay._ratesInterval = setInterval(fetchRatesAndUpdateUI, 60 * 1000);
+
+      // recompute & UI helpers
       let curr = 'SOL';
       function setActive(c){
         curr = c;
@@ -405,7 +435,7 @@
       }
 
       [btnSOL,btnUSDT,btnBTC].forEach(b=>{
-        addTap(b, (e)=> { setActive(b.dataset.currency); });
+        addTap(b, ()=> { setActive(b.dataset.currency); });
       });
       usdInput.addEventListener('input', ()=> { cryptoInput.value = ''; recompute(); });
       cryptoInput.addEventListener('input', ()=> { usdInput.value = ''; recompute(); });
@@ -476,21 +506,20 @@
 
             // set fee payer & recent blockhash
             tx.feePayer = fromPubkey;
-            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+            const { blockhash } = await connection.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
 
             resultLine.textContent = 'Открываю Phantom для подписи и отправки транзакции...';
 
             // Try provider.sendTransaction (recommended) or fallback to sign & send
             if (typeof provider.sendTransaction === 'function'){
-              // provider.sendTransaction will open Phantom UI to sign+send
               const signature = await provider.sendTransaction(tx, connection);
               resultLine.innerHTML = 'Транзакция отправлена, ожидание подтверждения... txid: <code>' + signature + '</code>';
-              // construct explorer link
               const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-              // wait confirmation
               await connection.confirmTransaction(signature, 'confirmed');
               resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+              // clear interval
+              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
             } else if (typeof provider.signAndSendTransaction === 'function'){
               const signed = await provider.signAndSendTransaction(tx);
               const signature = signed && (signed.signature || signed);
@@ -498,8 +527,8 @@
               const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
               await connection.confirmTransaction(signature, 'confirmed');
               resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
             } else if (typeof provider.signTransaction === 'function'){
-              // sign locally and send raw
               const signedTx = await provider.signTransaction(tx);
               const raw = signedTx.serialize();
               const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
@@ -507,6 +536,7 @@
               const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
               await connection.confirmTransaction(signature, 'confirmed');
               resultLine.innerHTML = 'Платёж подтверждён. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">Посмотреть в Explorer</a><br><small>txid: ' + signature + '</small>';
+              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
             } else {
               resultLine.textContent = 'Phantom установлен, но не поддерживает нужные методы. Используйте кнопку "Open in Phantom" или deeplink.';
             }
@@ -519,6 +549,8 @@
           // fallback deep link if provider not found (mobile / no extension)
           resultLine.textContent = 'Phantom не обнаружен — открою ссылку для оплаты.';
           const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
+          // clear interval before redirect
+          if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
           window.location.href = url;
         }
       });
@@ -526,9 +558,12 @@
       // default active
       setActive('SOL');
 
-      // close on overlay click outside modal
+      // close on overlay click outside modal (clear interval too)
       overlay.addEventListener('click', function(e){
-        if (e.target === overlay) overlay.remove();
+        if (e.target === overlay) {
+          if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+          overlay.remove();
+        }
       });
 
       return overlay;
@@ -632,7 +667,7 @@
       });
     }
 
-    console.log('Buy handlers installed — Phantom sendTransaction enabled (address set).');
+    console.log('Buy handlers installed — CoinGecko rates + Phantom sendTransaction integration.');
 
   })();
   </script>
