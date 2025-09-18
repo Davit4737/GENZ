@@ -8,9 +8,11 @@
   <meta name="robots" content="noindex,nofollow" />
   <style>
     :root{
-      --bg1:#0f1724; --muted-weak:rgba(255,255,255,0.60);
+      --bg1:#0f1724;
+      --muted-weak:rgba(255,255,255,0.60);
       --card-bg: rgba(6,10,20,0.62);
-      --yellow-1:#ffd60a; --yellow-2:#ffb300;
+      --yellow-1:#ffd60a;
+      --yellow-2:#ffb300;
       --maxw:1100px;
       --accent:#7dd3fc;
       --panel-bg:#071025;
@@ -63,51 +65,57 @@
     .info-line{color:var(--muted-weak);margin-top:10px}
 
     /* NAV always visible and mobile-friendly */
-    nav#mainNav {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      max-width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 6px 0;
-      flex-wrap: nowrap;
-    }
+    nav#mainNav {display:flex;gap:12px;align-items:center;max-width: 100%;overflow-x: auto;-webkit-overflow-scrolling: touch;padding: 6px 0;flex-wrap: nowrap}
     nav#mainNav a { white-space: nowrap; color: #e6eef6; text-decoration: none; padding:8px 10px; border-radius:10px; transition: all .12s; }
     nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
     nav#mainNav a.btn { color: #0b1220; }
-
     @media (max-width: 900px) {
       nav#mainNav a { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
       nav#mainNav { justify-content: flex-end; }
       #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
     }
 
-    /* socials in header */
+    /* socials */
     .socials { display:flex; gap:8px; align-items:center; margin-left:8px; }
     .socials a { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; transition:all .12s; }
     .socials a:hover { transform:translateY(-2px); background: rgba(255,255,255,0.04); }
     .socials svg { width:20px; height:20px; display:block; fill: #e6eef6; }
-
     .socials-side { display:flex; gap:8px; margin-top:10px; }
     .socials-side a { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; color:var(--muted-weak); font-size:13px; transition:all .12s; }
     .socials-side a:hover { background: rgba(255,255,255,0.03); color:#fff; }
     .socials-side svg { width:18px; height:18px; fill: #e6eef6; }
+    #mobileFallbackBuy { display: none; position: fixed; right: 14px; bottom: 18px; z-index: 25000; background: linear-gradient(135deg,#ffd60a,#ffb300); color:#071025; padding: 12px 14px; border-radius: 14px; font-weight:800; box-shadow: 0 8px 30px rgba(0,0,0,0.45); border: none; }
 
-    #mobileFallbackBuy {
-      display: none;
-      position: fixed;
-      right: 14px;
-      bottom: 18px;
-      z-index: 25000;
-      background: linear-gradient(135deg,#ffd60a,#ffb300);
-      color:#071025;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-weight:800;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-      border: none;
+    /* Whitepaper fullscreen panel:
+       uses the requested photo as background (cover), with a dark gradient overlay
+       so the text stays readable on top of the image. */
+    .wp-panel { position:fixed; inset:0; z-index:30000; display:none; background:linear-gradient(180deg, rgba(2,6,23,0.95), rgba(2,6,23,0.98)); }
+    .wp-inner { 
+      max-width:1200px; 
+      margin:48px auto; 
+      /* photo as background + dark gradient overlay for contrast */
+      background: linear-gradient(180deg, rgba(6,10,20,0.92), rgba(6,10,20,0.6)), url('./img/41bef794-cc43-4dc0-a9cf-6504b5b0db48-wm.png'); 
+      background-size: cover; 
+      background-position: center; 
+      border-radius:12px; 
+      display:block; 
+      padding:28px; 
+      height:calc(100% - 96px); 
+      overflow:auto; 
+      box-shadow:0 30px 80px rgba(0,0,0,0.8); 
+      color: #fff;
     }
+    .wp-content { color:rgba(255,255,255,0.95); font-size:15px; line-height:1.6; max-width:1000px; margin:0 auto; background: transparent; }
+    .wp-title { font-size:26px; font-weight:800; margin-bottom:8px; color:#fff; text-align:center; }
+    .wp-section { margin-bottom:18px; }
+    .wp-section h4 { margin:0 0 8px 0; font-size:18px; color:var(--yellow-1); }
+    .wp-close { position:absolute; right:34px; top:28px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:#ffd60a; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:700; }
+
+    @media (max-width: 900px) {
+      .wp-inner { margin:24px; padding:18px; height:calc(100% - 56px); }
+      .wp-title { font-size:20px; }
+    }
+
   </style>
 </head>
 <body>
@@ -129,13 +137,12 @@
         <a href="#tokenomics" class="nav-link">Tokenomics</a>
         <a href="#roadmap" class="nav-link">Roadmap</a>
         <a href="#faq" class="nav-link">FAQ</a>
-        <a href="#whitepaper" class="nav-link">White Paper</a>
         <a class="btn nav-link" href="#buy" id="navBuy">Buy</a>
       </nav>
 
       <div class="socials" aria-hidden="false">
         <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ в X (Twitter)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1-.7.3-1.5.6-2.3.6z"/></svg>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
         </a>
         <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ в Telegram">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
@@ -188,7 +195,6 @@
           </div>
         </div>
 
-        <!-- tokenomics, roadmap, whitepaper, faq (unchanged) -->
         <div class="card" style="margin-top:16px" id="tokenomics">
           <h3>Tokenomics</h3>
           <p class="muted small">Transparency &gt; hype. Example allocation below.</p>
@@ -220,9 +226,9 @@
           </div>
           <div style="display:flex;gap:8px;margin-top:12px">
             <button id="downloadWhitepaper" class="btn">Download White Paper</button>
-            <button id="openWhitepaper" class="genz-secondary">Open (inline)</button>
+            <!-- inline view removed as requested -->
+            <button id="openWhitepaperFull" class="btn" style="background:linear-gradient(135deg,#7dd3fc,#4fd1c5);color:#02121a">Open White Paper (Fullscreen)</button>
           </div>
-          <div id="whitepaperInline" class="muted small" style="margin-top:10px;display:none;white-space:pre-wrap;max-height:260px;overflow:auto;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px"></div>
         </div>
 
         <div class="card" style="margin-top:16px" id="faq">
@@ -251,12 +257,12 @@
           <div style="margin-top:12px">
             <div class="socials-side" aria-hidden="false">
               <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ в X">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1-.7.3-1.5.6-2.3.6z"/></svg>
-                <span>X</span>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1\"/></svg>
+                <span style="margin-left:8px">X</span>
               </a>
               <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ в Telegram">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
-                <span>Telegram</span>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z\"/></svg>
+                <span style="margin-left:8px">Telegram</span>
               </a>
             </div>
           </div>
@@ -275,7 +281,7 @@
         <div style="opacity:.8">|</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ X" style="text-decoration:none;color:inherit;">
-            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1-.7.3-1.5.6-2.3.6z"/></svg>
+            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1\"/></svg>
           </a>
           <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ Telegram" style="text-decoration:none;color:inherit;">
             <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
@@ -288,7 +294,58 @@
   <!-- floating fallback buy (visible on mobile) -->
   <button id="mobileFallbackBuy" type="button" aria-hidden="false">Buy</button>
 
-  <!-- load solana web3 (CDN) -->
+  <!-- Whitepaper fullscreen panel -->
+  <div id="whitepaperPanel" class="wp-panel" role="dialog" aria-modal="true" tabindex="-1">
+    <button id="wpClose" class="wp-close">CLOSE</button>
+    <div class="wp-inner">
+      <div class="wp-content" id="wpContent">
+        <div class="wp-title">GENZ — White Paper</div>
+
+        <div class="wp-section">
+          <h4>Vision</h4>
+          <p>GENZ создаётся как сообщество-ориентированный мемкойн с прозрачной моделью и поэтапной продажей. Цель — дать пользователям честный вход, стабильную ликвидность и возможности для комьюнити-вознаграждений и мерча.</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Tokenomics</h4>
+          <ul>
+            <li>Total supply: 1,000,000,000 GENZ</li>
+            <li>Presale: 20%</li>
+            <li>Liquidity: 30%</li>
+            <li>Team (vesting): 10%</li>
+            <li>Marketing / Growth: 20%</li>
+            <li>Airdrop / Community: 10%</li>
+          </ul>
+        </div>
+
+        <div class="wp-section">
+          <h4>Roadmap</h4>
+          <ol>
+            <li>Подготовка пресейла и аудит базовых контрактов</li>
+            <li>Листинг на DEX/CEX, обеспечение ликвидности</li>
+            <li>Масштабный маркетинг, мероприятия для комьюнити, релиз мерча</li>
+          </ol>
+        </div>
+
+        <div class="wp-section">
+          <h4>Security & Verification</h4>
+          <p>Контракты публикуются и верифицируются на обозревателях (Solscan). Никогда не делитесь приватными клавишами. Аудит рекомендуется перед массовым листингом.</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Team & Vesting</h4>
+          <p>Доля команды блокируется и распределяется по заранее объявленному графику (vesting).</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Legal & Risk</h4>
+          <p>GENZ не даёт финансовых гарантий. Участие в пресейле несёт риски. Инвесторы должны проводить собственную проверку и учитывать возможные ограничения в их юрисдикциях.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- load solana web3 (CDN) - single include -->
   <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
 
   <script>
@@ -621,7 +678,7 @@
       });
     }
 
-    // Whitepaper download and inline open
+    // Whitepaper download (excerpt)
     const whiteText = [
 "GENZ — White Paper (excerpt)",
 "",
@@ -648,8 +705,6 @@
 ].join("\n");
 
     const dwBtn = $('downloadWhitepaper');
-    const openBtn = $('openWhitepaper');
-    const inlineBox = $('whitepaperInline');
     if (dwBtn){
       dwBtn.addEventListener('click', function(){
         const blob = new Blob([whiteText], { type: 'text/plain' });
@@ -660,14 +715,30 @@
         URL.revokeObjectURL(url);
       });
     }
-    if (openBtn && inlineBox){
-      openBtn.addEventListener('click', function(){
-        inlineBox.style.display = inlineBox.style.display === 'none' ? 'block' : 'none';
-        inlineBox.textContent = whiteText;
+
+    // Fullscreen whitepaper panel handlers (simplified)
+    var openFullBtn = $('openWhitepaperFull');
+    var wpPanel = $('whitepaperPanel');
+    var wpClose = $('wpClose');
+    if (openFullBtn && wpPanel){
+      addTap(openFullBtn, function(){
+        wpPanel.style.display = 'block';
+        wpPanel.focus();
+        document.body.style.overflow = 'hidden';
       });
     }
+    if (wpClose && wpPanel){
+      addTap(wpClose, function(){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; });
+    }
+    if (wpPanel){
+      wpPanel.addEventListener('click', function(e){ if (e.target === wpPanel) { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
+      wpPanel.addEventListener('keydown', function(e){ if (e.key === 'Escape') { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
+    }
 
-    console.log('Buy handlers installed — CoinGecko rates + Phantom sendTransaction integration.');
+    // small accessibility: close modal with ESC globally when open
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (wpPanel && wpPanel.style.display === 'block'){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; } const gm = document.getElementById('__genz_modal'); if (gm) gm.remove(); } });
+
+    console.log('Handlers installed — Whitepaper fullscreen with background image (no inline view).');
 
   })();
   </script>
