@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GENZ — Presale (Phantom-ready)</title>
+  <title>GENZ — Presale (Phantom-ready, improved)</title>
   <meta name="robots" content="noindex,nofollow" />
   <style>
     :root{--bg:#0f1724;--muted:rgba(255,255,255,0.6);--card:rgba(6,10,20,0.62);--accent:#ffd60a}
-    *{box-sizing:border-box}html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:#fff;background:var(--bg)}
+    *{box-sizing:border-box} html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:#fff;background:var(--bg)}
     .wrap{max-width:1100px;margin:28px auto;padding:18px}
     .card{background:var(--card);padding:16px;border-radius:12px;margin-bottom:14px}
     .btn{background:linear-gradient(135deg,#ffd60a,#ffb300);border:0;padding:10px 14px;border-radius:10px;font-weight:700;color:#071025}
@@ -16,57 +16,58 @@
     .flex{display:flex;gap:8px;align-items:center}
     .input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;width:100%}
     .small{font-size:13px;color:var(--muted)}
-    /* modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:20000}
-    .modal{width:520px;max-width:96%;background:#071025;padding:18px;border-radius:10px}
-    .close{position:absolute;right:18px;top:12px;color:var(--accent);cursor:pointer}
+    .modal{width:560px;max-width:96%;background:#071025;padding:18px;border-radius:10px;position:relative}
+    .note{font-size:13px;color:var(--muted);margin-top:8px}
     pre{white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;font-size:13px}
+    .warn{color:#ffb3a7}
+    .ok{color:#b7ffb3}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <h2>GENZ — Presale (Phantom-ready)</h2>
-      <p class="muted">Нажмите <strong>Buy</strong> — модал откроется. Код сначала попытается использовать расширение Phantom; если провайдера нет, откроется deeplink (Phantom app / page).</p>
+      <p class="muted">Нажмите <strong>Buy</strong>. Код попробует использовать расширение Phantom; если провайдера нет — откроется deeplink (Phantom app / page).</p>
+
       <div class="flex" style="margin-top:12px">
         <button id="simpleBuy" class="btn">Buy</button>
-        <button id="debugBtn" class="secondary">Debug provider</button>
-        <div class="small muted">Network: <span id="currentNetwork">devnet</span></div>
+        <button id="testProvider" class="secondary">Test provider</button>
+        <button id="reloadBtn" class="secondary">Reload</button>
+        <div style="margin-left:auto" class="small muted">Network: <span id="currentNetwork">devnet</span></div>
       </div>
-      <p class="small muted" style="margin-top:10px">Совет: тестируйте на <strong>devnet</strong> в HTTPS. Для Safari — используйте кнопку <em>Open Phantom (deeplink)</em> в модале.</p>
+
+      <p class="note">Рекомендация: тестируйте в <strong>Chrome/Edge</strong> по HTTPS (или <code>localhost</code>). Если используете Safari — deeplink работает лучше.</p>
+      <p id="envHint" class="small muted"></p>
     </div>
   </div>
-
-  <!-- modal container -->
-  <div id="__modal_root" style="display:none"></div>
 
   <!-- solana web3 -->
   <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
 
   <script>
   (function(){
-
-    // --- CONFIG ---
+    // CONFIG
     const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
-    // default to devnet for safe testing; switch in UI
-    let NETWORK = 'devnet'; // 'devnet' or 'mainnet-beta'
-    const connection = () => new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
+    let NETWORK = 'devnet'; // safe default for testing
+    const DEFAULT_POLL_TIMEOUT = 7000; // ms to wait for injection
+    const POLL_INTERVAL = 250; // ms
 
-    // --- helpers ---
+    // minimal helpers
+    const $ = id => document.getElementById(id);
     function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
-    function $id(id){ return document.getElementById(id); }
-    function addTap(el, fn){ if(!el) return; el.addEventListener('click', fn, {passive:true}); }
+    function addTap(node, fn){ if(!node) return; node.addEventListener('click', fn, {passive:true}); }
 
-    // robust Phantom detection
-    function detectPhantomProvider() {
+    // Robust Phantom detection (multiple paths)
+    function detectPhantomCandidate(){
       if (window.solana && window.solana.isPhantom) return window.solana;
       if (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) return window.phantom.solana;
-      if (window.solana && Array.isArray(window.solana.providers)) {
+      if (window.solana && Array.isArray(window.solana.providers)){
         for (const p of window.solana.providers) if (p && p.isPhantom) return p;
       }
-      // last-resort: scan window keys for isPhantom flag (try/catch safe)
+      // final scan (try/catch to avoid cross-origin getters)
       try {
-        for (const k of Object.keys(window)) {
+        for (const k of Object.keys(window)){
           try {
             const v = window[k];
             if (v && typeof v === 'object' && v.isPhantom) return v;
@@ -76,18 +77,39 @@
       return null;
     }
 
-    // show debug info in console + small UI hint
-    function showDebug(resultEl){
-      console.log('--- PHANTOM DEBUG START ---');
+    // Wait for provider to appear (polling) — returns provider or null
+    async function waitForProvider(timeout = DEFAULT_POLL_TIMEOUT){
+      const deadline = Date.now() + timeout;
+      let provider = detectPhantomCandidate();
+      while(!provider && Date.now() < deadline){
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+        provider = detectPhantomCandidate();
+      }
+      return provider;
+    }
+
+    // Debug helper: prints useful info
+    function printDebugToConsole(){
+      console.log('--- PHANTOM DEBUG ---');
       console.log('window.solana =', window.solana);
       console.log('window.phantom =', window.phantom);
       console.log('navigator.userAgent =', navigator.userAgent);
       console.log('location.href =', location.href);
-      console.log('--- PHANTOM DEBUG END ---');
-      if (resultEl) resultEl.innerHTML = '<div class="small">Debug printed to console. Если undefined — откройте сайт по HTTPS и убедитесь, что расширение включено и кошелек разблокирован.</div>';
+      console.log('document.domain =', document.domain);
+      console.log('isSecureContext =', window.isSecureContext);
+      console.log('--- END DEBUG ---');
     }
 
-    // build modal
+    // Small environment hint
+    (function envHint(){
+      const hint = $('envHint');
+      let notices = [];
+      if (!window.isSecureContext && location.hostname !== 'localhost') notices.push('Сайт не в защищённом контексте (HTTPS) — расширения кошельков могут не инжектиться.');
+      if (window.self !== window.top) notices.push('Страница загружена в iframe — расширения обычно не инжектятся в iframe.');
+      hint.innerHTML = notices.length ? '<span class="warn">' + notices.join(' ') + '</span>' : '<span class="ok">Ок — выглядит как нормальное окружение.</span>';
+    })();
+
+    // Build modal
     function openBuyModal(){
       if (document.getElementById('__modal')) return;
       const overlay = el('<div class="overlay" id="__modal"></div>');
@@ -95,32 +117,29 @@
       overlay.appendChild(box);
 
       box.innerHTML = `
-        <div style="position:relative">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3>Buy GENZ</h3>
-            <div style="font-size:13px;color:var(--muted)">Network:
-              <select id="netSelect" style="margin-left:6px;padding:6px;border-radius:6px;background:#071025;color:#fff;border:1px solid rgba(255,255,255,0.06)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3>Buy GENZ</h3>
+          <div>
+            <label class="small muted">Network:
+              <select id="netSelect" style="margin-left:8px;padding:6px;border-radius:6px;background:#071025;color:#fff;border:1px solid rgba(255,255,255,0.06)">
                 <option value="devnet">devnet</option>
                 <option value="mainnet-beta">mainnet-beta</option>
               </select>
-            </div>
+            </label>
           </div>
         </div>
-        <div class="small muted" style="margin-top:8px">Введите сумму в USD или SOL. Если Phantom не инжектится — используйте кнопку <strong>Open Phantom (deeplink)</strong>.</div>
+        <div class="note">Введите сумму в USD или SOL. Подождём появление Phantom (если расширение инжектится позже).</div>
         <div style="margin-top:12px"><input id="usdInput" class="input" placeholder="Amount in USD (e.g. 10)"></div>
         <div style="margin-top:8px"><input id="cryptoInput" class="input" placeholder="Amount in SOL (e.g. 0.1)"></div>
-
         <div style="display:flex;gap:8px;margin-top:12px">
           <button id="payBtn" class="btn">Pay with SOL (Phantom)</button>
           <button id="deeplinkBtn" class="secondary">Open Phantom (deeplink)</button>
-          <button id="copyAddr" class="secondary">Copy recipient address</button>
+          <button id="copyAddr" class="secondary">Copy recipient</button>
         </div>
-
         <div id="resultLine" style="margin-top:12px;font-weight:700"></div>
-        <div id="debugSmall" style="margin-top:8px"></div>
-        <div style="margin-top:10px"><button id="closeModal" class="secondary">Close</button></div>
+        <div id="debugBox" style="margin-top:10px" class="small muted"></div>
+        <div style="margin-top:12px"><button id="closeModal" class="secondary">Close</button></div>
       `;
-
       document.body.appendChild(overlay);
 
       // elements
@@ -130,63 +149,73 @@
       const usdInput = overlay.querySelector('#usdInput');
       const cryptoInput = overlay.querySelector('#cryptoInput');
       const resultLine = overlay.querySelector('#resultLine');
-      const debugSmall = overlay.querySelector('#debugSmall');
+      const debugBox = overlay.querySelector('#debugBox');
       const netSelect = overlay.querySelector('#netSelect');
       const closeModal = overlay.querySelector('#closeModal');
 
-      // network toggle
       netSelect.value = NETWORK;
       netSelect.addEventListener('change', ()=> {
         NETWORK = netSelect.value;
-        document.getElementById('currentNetwork').textContent = NETWORK;
-        debugSmall.innerHTML = `<div class="small muted">Network set to ${NETWORK} — connection will use ${NETWORK}.</div>`;
+        $('currentNetwork').textContent = NETWORK;
+        debugBox.textContent = 'Network switched to ' + NETWORK;
       });
 
-      // copy address
       copyBtn.addEventListener('click', async ()=>{
-        try { await navigator.clipboard.writeText(SOL_ADDRESS); resultLine.textContent = 'Address copied to clipboard.'; }
-        catch(e){ resultLine.textContent = 'Copy failed — manual copy: ' + SOL_ADDRESS; }
+        try { await navigator.clipboard.writeText(SOL_ADDRESS); resultLine.textContent = 'Адрес скопирован.'; }
+        catch(e){ resultLine.textContent = 'Не удалось скопировать — вручную: ' + SOL_ADDRESS; }
       });
 
-      // deeplink open (explicit)
       deeplinkBtn.addEventListener('click', ()=>{
-        const usd = parseFloat(usdInput.value||0);
-        const crypto = parseFloat(cryptoInput.value||0);
-        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / 25) : 0); // if rates unavailable, 25$ default
-        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter amount in USD or SOL.'; return; }
+        const usd = parseFloat(usdInput.value||0), crypto = parseFloat(cryptoInput.value||0);
+        let solAmount = crypto>0 ? crypto : (usd>0 ? usd/25 : 0); // fallback rate
+        if (!solAmount){ resultLine.textContent = 'Введите сумму.'; return; }
         const amountStr = String(Number(solAmount));
         let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
         if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
         window.open(deeplink, '_blank');
-        resultLine.innerHTML = 'Открыт deeplink — на мобильном откроется приложение Phantom, на десктопе — страница Phantom.';
+        resultLine.innerHTML = 'Открыт deeplink — на мобильном откроется приложение, на десктопе — страница Phantom.';
       });
 
-      // pay handler (robust provider detection + send tx)
+      // PAY handler with waitForProvider
       payBtn.addEventListener('click', async ()=>{
         resultLine.textContent = '';
-        const usd = parseFloat(usdInput.value||0);
-        const crypto = parseFloat(cryptoInput.value||0);
-        // live rates fetch (best-effort)
-        let solRate = 25.0;
+        debugBox.textContent = '';
+        // compute SOL amount
+        const usd = parseFloat(usdInput.value||0), crypto = parseFloat(cryptoInput.value||0);
+        // try live rate quick (best-effort)
+        let solRate = 25;
         try {
           const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
           if (r.ok){ const j = await r.json(); solRate = Number(j.solana.usd) || solRate; }
-        } catch(e){ /* ignore */ }
-        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / solRate) : 0);
-        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter amount in USD or SOL.'; return; }
+        } catch(e){}
+        const solAmount = crypto>0 ? crypto : (usd>0 ? (usd/solRate) : 0);
+        if (!solAmount){ resultLine.textContent = 'Введите сумму в USD или SOL.'; return; }
 
-        // detect provider
-        const provider = detectPhantomProvider();
-        console.log('detected provider =', provider);
+        resultLine.textContent = 'Ищем Phantom (ожидание до ' + (DEFAULT_POLL_TIMEOUT/1000) + 'с)...';
+        const start = Date.now();
+        const provider = await waitForProvider(DEFAULT_POLL_TIMEOUT);
+        const waited = Math.round((Date.now()-start)/1000*10)/10;
+        console.log('waited for provider (s):', waited, 'provider:', provider);
+
         if (provider && provider.isPhantom){
+          resultLine.textContent = 'Phantom обнаружен — пытаемся подключиться...';
+          printDebugToConsole();
           try {
-            resultLine.textContent = 'Phantom detected — requesting connect...';
+            // connect (user gesture exists because handler is click)
             await provider.connect();
-            if (!provider.publicKey){
-              resultLine.innerHTML = 'Не удалось получить publicKey — откройте расширение Phantom и разблокируйте кошелек; затем попробуйте снова.';
-              showDebug(debugSmall);
-              return;
-            }
+          } catch(errConnect){
+            console.warn('provider.connect() threw', errConnect);
+            // still continue — provider may be connected/trusted already
+          }
+
+          // if wallet not unlocked (publicKey missing)
+          if (!provider.publicKey){
+            resultLine.innerHTML = 'Phantom доступен, но кошелёк не разблокирован. Откройте расширение, разблокируйте кошелёк и повторите. <br><span class="small muted">Нажмите "Test provider" для логов.</span>';
+            return;
+          }
+
+          // build TX
+          try {
             const fromPubkey = provider.publicKey;
             const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
             const lamports = Math.round(solAmount * solanaWeb3.LAMPORTS_PER_SOL);
@@ -194,83 +223,87 @@
               solanaWeb3.SystemProgram.transfer({ fromPubkey, toPubkey, lamports })
             );
             tx.feePayer = fromPubkey;
-            const conn = connection();
+
+            const conn = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
             const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
 
-            resultLine.textContent = 'Откроется Phantom для подписи — подтвердите транзакцию.';
-            // use best method available
+            resultLine.textContent = 'Откройте Phantom и подтвердите транзакцию.';
+
+            // try send flows
             if (typeof provider.sendTransaction === 'function'){
-              const sig = await provider.sendTransaction(tx, conn);
-              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + sig + '</code>';
-              await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + sig + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
+              const signature = await provider.sendTransaction(tx, conn);
+              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + signature + '</code>';
+              await conn.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + signature + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
               return;
             } else if (typeof provider.signAndSendTransaction === 'function'){
               const signed = await provider.signAndSendTransaction(tx);
-              const sig = signed && (signed.signature || signed);
-              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + sig + '</code>';
-              await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + sig + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
+              const signature = signed && (signed.signature || signed);
+              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + signature + '</code>';
+              await conn.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + signature + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
               return;
             } else if (typeof provider.signTransaction === 'function'){
               const signedTx = await provider.signTransaction(tx);
               const raw = signedTx.serialize();
-              const sig = await conn.sendRawTransaction(raw, { skipPreflight: false });
-              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + sig + '</code>';
-              await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + sig + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
+              const signature = await conn.sendRawTransaction(raw, { skipPreflight: false });
+              resultLine.innerHTML = 'Отправлено, ожидаем подтверждения... txid: <code>' + signature + '</code>';
+              await conn.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+              resultLine.innerHTML = 'Подтверждено. <a href="https://explorer.solana.com/tx/' + signature + (NETWORK==='devnet'? '?cluster=devnet':'') + '" target="_blank">View</a>';
               return;
             } else {
-              resultLine.innerHTML = 'Phantom найден, но отсутствуют методы подписи. Попробуйте обновить Phantom или браузер.';
-              showDebug(debugSmall);
+              resultLine.innerHTML = 'Phantom найден, но нет совместимых методов подписи. Попробуйте обновить расширение или использовать Chrome/Edge.';
+              debugBox.textContent = 'Смотрите консоль — провайдер: ' + JSON.stringify(Object.keys(provider || {}));
+              printDebugToConsole();
               return;
             }
-          } catch (err){
-            console.error('provider error', err);
-            resultLine.innerHTML = 'Ошибка при работе с Phantom: ' + (err && err.message ? err.message : String(err));
-            showDebug(debugSmall);
+          } catch (errTx){
+            console.error('tx error', errTx);
+            resultLine.innerHTML = 'Ошибка при сборке/отправке транзакции: ' + (errTx && errTx.message ? errTx.message : String(errTx));
+            printDebugToConsole();
             return;
           }
+        } else {
+          // no provider -> deeplink fallback
+          const amountStr = String(Number(solAmount));
+          let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
+          if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
+          try {
+            window.open(deeplink, '_blank');
+            resultLine.innerHTML = 'Phantom не найден локально — открыт deeplink. На мобильном приложение будет подставлять адрес/сумму.';
+            printDebugToConsole();
+          } catch (e){
+            resultLine.innerHTML = 'Не удалось открыть deeplink. Скопируйте адрес/сумму вручную: <code>' + SOL_ADDRESS + '</code> — ' + amountStr + ' SOL';
+            printDebugToConsole();
+          }
         }
-
-        // no provider -> deeplink fallback
-        const amountStr = String(Number(solAmount));
-        let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
-        if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
-        try { window.open(deeplink, '_blank'); resultLine.innerHTML = 'Phantom не найден. Открываем deeplink — мобильные пользователи увидят приложение.'; }
-        catch(e){ resultLine.innerHTML = 'Не удалось открыть deeplink. Скопируйте адрес: ' + SOL_ADDRESS + ' — ' + amountStr + ' SOL'; }
       }); // payBtn
 
-      // debug button inside modal
-      overlay.querySelector('#debugSmall').addEventListener('click', ()=>{ showDebug(debugSmall); });
-
+      // close modal handlers
       closeModal.addEventListener('click', ()=> overlay.remove());
-      // close on background click
-      overlay.addEventListener('click', (ev)=>{ if (ev.target === overlay) overlay.remove(); });
-    } // openBuyModal
-
-    // attach handlers
-    addTap(document.getElementById('simpleBuy'), openBuyModal);
-    addTap(document.getElementById('debugBtn'), ()=>{
-      const p = detectPhantomProvider();
-      console.log('detectPhantomProvider() =>', p);
-      alert('Debug: смотрите консоль (F12). Если undefined — откройте в HTTPS и убедитесь, что Phantom включён.');
-    });
-
-    // initial network text
-    document.getElementById('currentNetwork').textContent = NETWORK;
-
-    // expose detect function for console if needed
-    window.detectPhantomProvider = detectPhantomProvider;
-
-    // small UX: warn if not secure context
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost'){
-      console.warn('Site is not served over HTTPS — wallets may not inject provider.');
+      overlay.addEventListener('click', (ev)=> { if (ev.target === overlay) overlay.remove(); });
     }
 
-    // debug helpers used inside modal
-    function showDebug(el){ try { el.innerHTML = '<div class="small muted">Debug printed to console.</div>'; console.log('window.solana =', window.solana, 'window.phantom =', window.phantom); } catch(e){ } }
+    // Attach main UI handlers
+    addTap(document.getElementById('simpleBuy'), openBuyModal);
+    addTap(document.getElementById('reloadBtn'), ()=> location.reload());
+    addTap(document.getElementById('testProvider'), async ()=>{
+      const p = detectPhantomCandidate();
+      console.log('detectPhantomCandidate() =>', p);
+      printDebugToConsole();
+      alert('Test: смотрите консоль (F12). Если undefined — проверьте HTTPS, откройте Phantom, разрешите для этого сайта и/или перезагрузите страницу.');
+    });
+
+    // initial network display
+    document.getElementById('currentNetwork').textContent = NETWORK;
+
+    // expose for developer console
+    window.detectPhantomCandidate = detectPhantomCandidate;
+    window.waitForProvider = waitForProvider;
+
+    // final note in console
+    console.log('Phantom helper loaded. Tips: ensure HTTPS, not iframe, wallet unlocked, try Chrome/Edge. Use Test provider button.');
 
   })();
   </script>
