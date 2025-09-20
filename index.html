@@ -1,95 +1,907 @@
-// === REPLACE the payBtn click handler with this block ===
-payBtn.addEventListener('click', async ()=>{
-  const usd = parseFloat(usdInput.value||0);
-  const crypto = parseFloat(cryptoInput.value||0);
-  // compute SOL amount (floating, keep decimals)
-  let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
-  if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter an amount in USD or SOL.'; return; }
-
-  // detect provider (Phantom)
-  const provider = (window.solana && (window.solana.isPhantom ? window.solana : (Array.isArray(window.solana && window.solana.providers) ? window.solana.providers.find(p=>p.isPhantom) : null))) || null;
-
-  // prefer provider: attempt to build+send transaction using Phantom extension/mobile-injected provider
-  if (provider && provider.isPhantom){
-    try{
-      resultLine.textContent = 'Connecting to Phantom...';
-      await provider.connect();
-
-      const fromPubkey = provider.publicKey;
-      if (!fromPubkey){
-        resultLine.textContent = 'Failed to obtain public key from Phantom.';
-        return;
-      }
-
-      resultLine.textContent = 'Building transaction...';
-      const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
-      const lamports = Math.round(solAmount * solanaWeb3.LAMPORTS_PER_SOL);
-
-      const tx = new solanaWeb3.Transaction().add(
-        solanaWeb3.SystemProgram.transfer({
-          fromPubkey: fromPubkey,
-          toPubkey: toPubkey,
-          lamports: lamports
-        })
-      );
-
-      // set fee payer & recent blockhash
-      tx.feePayer = fromPubkey;
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-      tx.recentBlockhash = blockhash;
-
-      resultLine.textContent = 'Opening Phantom for signing...';
-
-      // Try common methods in best-effort order
-      if (typeof provider.sendTransaction === 'function'){
-        const signature = await provider.sendTransaction(tx, connection);
-        resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-        const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-        resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-        if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-        return;
-      } else if (typeof provider.signAndSendTransaction === 'function'){
-        const signed = await provider.signAndSendTransaction(tx);
-        const signature = signed && (signed.signature || signed);
-        resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-        const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-        resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-        if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-        return;
-      } else if (typeof provider.signTransaction === 'function'){
-        const signedTx = await provider.signTransaction(tx);
-        const raw = signedTx.serialize();
-        const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
-        resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-        const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-        await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-        resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-        if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-        return;
-      } else {
-        resultLine.textContent = 'Phantom found but does not support required signing methods. Consider updating Phantom.';
-      }
-    } catch (err){
-      console.error(err);
-      resultLine.textContent = 'Error while using Phantom provider: ' + (err && err.message ? err.message : String(err));
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GENZ — Presale</title>
+  <meta name="description" content="GENZ — meme coin. Presale landing (HTML/CSS/JS)." />
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg1:#0f1724;
+      --muted-weak:rgba(255,255,255,0.60);
+      --card-bg: rgba(6,10,20,0.62);
+      --yellow-1:#ffd60a;
+      --yellow-2:#ffb300;
+      --maxw:1100px;
+      --accent:#7dd3fc;
+      --panel-bg:#071025;
     }
-    return;
-  }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#fff;background-color:var(--bg1);position:relative;overflow-x:hidden}
+    .bg{position:fixed;inset:0;background-image:url('./img/IMG_0606.PNG');background-size:cover;background-position:center;z-index:0;filter:saturate(0.9) contrast(0.9);transform:translateZ(0)}
+    .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.75),rgba(2,8,25,0.85));z-index:1;pointer-events:none}
+    #bgCanvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none; }
+    .wrap{max-width:var(--maxw);margin:28px auto;padding:24px;position:relative;z-index:2}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{width:110px;height:110px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:2px solid rgba(255,255,255,0.06);flex-shrink:0}
+    .logo img{width:110%;height:110%;object-fit:cover;display:block;transform:scale(1.02)}
+    .brand .title{font-weight:800;font-size:16px}
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{color:var(--muted-weak);text-decoration:none;font-size:14px;padding:8px 10px;border-radius:10px;transition:all .18s}
+    .btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));color:#0b1220;font-weight:800;padding:10px 18px;border-radius:14px;border:0;cursor:pointer;position:relative;z-index:1000}
+    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:6px}
+    @media(min-width:960px){.grid{grid-template-columns:1fr 420px}}
+    .card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);backdrop-filter:blur(6px)}
+    h1{margin:0;font-size:34px}
+    p.lead{color:var(--muted-weak);margin-top:8px}
+    .stats{display:flex;gap:12px;margin-top:16px}
+    .stat{background: rgba(3,6,13,0.48); padding:12px;border-radius:10px;flex:1}
+    .progress{margin-top:14px}
+    .bar{height:12px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden;border:1px solid rgba(0,0,0,0.35)}
+    .bar-inner{height:100%;width:15%;background:linear-gradient(90deg,var(--yellow-1),var(--yellow-2));transition:width .9s}
+    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted-weak);margin-top:8px}
+    .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;color:var(--muted-weak)}
+    td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
+    .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.25);color:#fff;flex:1}
+    @media(max-width:600px){h1{font-size:22px}.logo{width:86px;height:86px}.logo img{width:100%;height:100%;transform:none}}
 
-  // If we reach here — provider not found. Use Phantom universal deeplink.
-  // Build deeplink: https://phantom.app/ul/transfer?address=ADDRESS&amount=AMOUNT
-  // Add cluster param for devnet if you're testing.
-  const amountStr = String(Number(solAmount)); // ensure decimal format
-  let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
-  if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
+    .genz-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:20000}
+    .genz-modal{width:520px;max-width:95%;background:var(--panel-bg);border-radius:12px;padding:18px;color:#fff;position:relative;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+    .genz-close{position:absolute;right:12px;top:8px;cursor:pointer;color:#ffd60a;font-weight:700}
+    .genz-input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;margin-top:8px}
+    .genz-btn{padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#ffd60a,#ffb300);border:0;cursor:pointer;font-weight:700}
+    .genz-secondary{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#fff;margin-left:8px}
+    .genz-small{font-size:13px;color:rgba(255,255,255,0.75);margin-top:8px}
 
-  // Open deeplink in new window/tab — on mobile this should open the app. On desktop it goes to phantom page.
-  try {
-    window.open(deeplink, '_blank');
-    resultLine.innerHTML = 'No Phantom extension detected. Opening Phantom link — users on mobile should see the app. <br>If nothing opens, copy this address and amount and paste into your wallet: <br><code>' + SOL_ADDRESS + '</code> — ' + amountStr + ' SOL';
-  } catch (e){
-    resultLine.innerHTML = 'Failed to open Phantom link. Copy address: <code>' + SOL_ADDRESS + '</code> — ' + amountStr + ' SOL';
-  }
-});
+    .currency-toggle{display:flex;gap:8px;margin-top:8px}
+    .currency-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6;cursor:pointer}
+    .currency-toggle button.active{background:#07263a;color:#fff;border-color:rgba(125,211,252,0.28);box-shadow:0 4px 14px rgba(7,38,58,0.6)}
+    .info-line{color:var(--muted-weak);margin-top:10px}
+
+    nav#mainNav {display:flex;gap:12px;align-items:center;max-width: 100%;overflow-x: auto;-webkit-overflow-scrolling: touch;padding: 6px 0;flex-wrap: nowrap}
+    nav#mainNav a { white-space: nowrap; color: #e6eef6; text-decoration: none; padding:8px 10px; border-radius:10px; transition: all .12s; }
+    nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
+    nav#mainNav a.btn { color: #0b1220; }
+    @media (max-width: 900px) {
+      nav#mainNav a { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
+      nav#mainNav { justify-content: flex-end; }
+      #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
+    }
+
+    .socials { display:flex; gap:8px; align-items:center; margin-left:8px; }
+    .socials a { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; transition:all .12s; }
+    .socials a:hover { transform:translateY(-2px); background: rgba(255,255,255,0.04); }
+    .socials svg { width:20px; height:20px; display:block; fill: #e6eef6; }
+    .socials-side { display:flex; gap:8px; margin-top:10px; }
+    .socials-side a { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; color:var(--muted-weak); font-size:13px; transition:all .12s; }
+    .socials-side a:hover { background: rgba(255,255,255,0.03); color:#fff; }
+    .socials-side svg { width:18px; height:18px; fill: #e6eef6; }
+    #mobileFallbackBuy { display: none; position: fixed; right: 14px; bottom: 18px; z-index: 25000; background: linear-gradient(135deg,#ffd60a,#ffb300); color:#071025; padding: 12px 14px; border-radius: 14px; font-weight:800; box-shadow: 0 8px 30px rgba(0,0,0,0.45); border: none; }
+
+    .wp-panel { position:fixed; inset:0; z-index:30000; display:none; background:linear-gradient(180deg, rgba(2,6,23,0.95), rgba(2,6,23,0.98)); }
+    .wp-inner { 
+      max-width:1200px; 
+      margin:48px auto; 
+      background: linear-gradient(180deg, rgba(6,10,20,0.92), rgba(6,10,20,0.6)), url('./img/41bef794-cc43-4dc0-a9cf-6504b5b0db48-wm.png'); 
+      background-size: cover; 
+      background-position: center; 
+      border-radius:12px; 
+      display:block; 
+      padding:28px; 
+      height:calc(100% - 96px); 
+      overflow:auto; 
+      box-shadow:0 30px 80px rgba(0,0,0,0.8); 
+      color: #fff;
+    }
+    .wp-content { color:rgba(255,255,255,0.95); font-size:15px; line-height:1.6; max-width:1000px; margin:0 auto; background: transparent; }
+    .wp-title { font-size:26px; font-weight:800; margin-bottom:8px; color:#fff; text-align:center; }
+    .wp-section { margin-bottom:18px; }
+    .wp-section h4 { margin:0 0 8px 0; font-size:18px; color:var(--yellow-1); }
+    .wp-close { position:absolute; right:34px; top:28px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:#ffd60a; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:700; }
+
+    @media (max-width: 900px) {
+      .wp-inner { margin:24px; padding:18px; height:calc(100% - 56px); }
+      .wp-title { font-size:20px; }
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+  <div class="bg" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand" role="banner">
+        <div class="logo" aria-label="GENZ logo">
+          <img src="./img/IMG_0605.PNG" alt="GENZ logo">
+        </div>
+        <div>
+          <div class="title">GENZ — Presale</div>
+          <div class="sub">Nickname: <strong>GENZ</strong></div>
+        </div>
+      </div>
+
+      <nav role="navigation" aria-label="Top navigation" id="mainNav">
+        <a href="#tokenomics" class="nav-link">Tokenomics</a>
+        <a href="#roadmap" class="nav-link">Roadmap</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <a class="btn nav-link" href="#buy" id="navBuy">Buy</a>
+      </nav>
+
+      <div class="socials" aria-hidden="false">
+        <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ on X (Twitter)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
+        </a>
+        <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ on Telegram">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section>
+        <div class="card">
+          <h1>GENZ — next-generation meme coin</h1>
+          <p class="lead">GENZ — memecoin for the new generation. This is the official presale page. Presale opens soon on Solana. Verify the contract address before participating; never share private keys.</p>
+
+          <div class="stats">
+            <div class="stat">
+              <small>Market Cap</small>
+              <strong>$200,000</strong>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div class="muted small">Stage</div>
+              <div class="muted small">Token price</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div><strong id="stageName">Presale — Stage 1</strong></div>
+              <div><strong id="tokenPrice">$0.02 / GENZ</strong></div>
+            </div>
+            <div class="bar" aria-hidden="true" style="margin-top:10px">
+              <div class="bar-inner" id="barInner" style="width:15%"></div>
+            </div>
+            <div class="bar-row"><span id="pct">15% Stage progress</span><span class="muted small">of stage target</span></div>
+          </div>
+
+          <div style="margin-top:18px" id="buy">
+            <div class="muted small">Presale status</div>
+            <div class="countdown" id="countdown"><!-- JS fills --></div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px">
+              <div class="muted small">Current stage: <strong id="stageLabel">Presale</strong></div>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);font-weight:700">Price: <span id="buyPrice">$0.02</span></div>
+                <button class="btn" id="simpleBuy">Buy</button>
+              </div>
+            </div>
+
+            <p class="muted small" style="margin-top:8px">Use the Connect wallet button to participate when presale is live. All purchases interact with the verified presale contract on Solana. Never share private keys.</p>
+            <div id="walletNotice"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="tokenomics">
+          <h3>Tokenomics</h3>
+          <p class="muted small">Transparency &gt; hype. Example allocation below.</p>
+          <table>
+            <tr><td>Total Supply</td><td class="right">1,000,000,000</td></tr>
+            <tr><td>Presale</td><td class="right">20%</td></tr>
+            <tr><td>Liquidity</td><td class="right">30%</td></tr>
+            <tr><td>Team (vesting)</td><td class="right">10%</td></tr>
+            <tr><td>Marketing / Growth</td><td class="right">20%</td></tr>
+            <tr><td>Airdrop / Community</td><td class="right">10%</td></tr>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="roadmap">
+          <h3>Roadmap</h3>
+          <ol class="muted small">
+            <li>Presale & private listings</li>
+            <li>CEX / DEX listings, liquidity add</li>
+            <li>Marketing push, community events, merch</li>
+          </ol>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="whitepaper">
+          <h3>White Paper</h3>
+          <p class="muted small">A brief overview and project goals are in the white paper. Below is an excerpt and a button to download the full document.</p>
+          <div style="margin-top:8px" class="muted small">
+            <strong>GENZ — short description</strong>
+            <p style="margin-top:8px">GENZ is a meme coin created for the community, with a focus on ease of participation and transparency. Main goals: sustainable liquidity pool, fair listing, active community and merch. Technically: a token on Solana with a distribution model of 20% presale, 30% liquidity, 10% to the team (with vesting).</p>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="downloadWhitepaper" class="btn">Download White Paper</button>
+            <!-- fullscreen whitepaper remains -->
+            <button id="openWhitepaperFull" class="btn" style="background:linear-gradient(135deg,#7dd3fc,#4fd1c5);color:#02121a">Open White Paper (Fullscreen)</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px" id="faq">
+          <h3>FAQ</h3>
+          <details>
+            <summary>How do I verify the contract?</summary>
+            <div class="muted small" style="margin-top:8px">Copy the contract address and check its code and transactions on Solscan. The official verified address will be published prior to presale.</div>
+          </details>
+          <details style="margin-top:8px">
+            <summary>How do I participate?</summary>
+            <div class="muted small" style="margin-top:8px">Connect a wallet (Phantom for SOL). Use the Buy button to pay. Do not share private keys.</div>
+          </details>
+        </div>
+      </section>
+
+      <aside>
+        <div class="card">
+          <h3>Subscribe</h3>
+          <p class="muted small">Subscribe for Whiteface Alerts, Contracts, Publications, Official Announcements.</p>
+          <form id="subscribeForm" class="subscribe" onsubmit="return false">
+            <input id="email" class="input" placeholder="Email" />
+            <button id="subBtn" class="btn">Subscribe</button>
+          </form>
+          <div id="subMsg" class="muted small" style="margin-top:8px"></div>
+
+          <div style="margin-top:12px">
+            <div class="socials-side" aria-hidden="false">
+              <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ on X">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1\"/></svg>
+                <span style="margin-left:8px">X</span>
+              </a>
+              <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ on Telegram">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z\"/></svg>
+                <span style="margin-left:8px">Telegram</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4>Disclaimer</h4>
+          <p class="muted small">GENZ presale page. Not financial advice. Verify transactions on Solana explorer / Polygon explorer before assuming anything.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <div style="display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div class="muted small">© 2025 GENZ — all rights reserved.</div>
+        <div style="opacity:.8">|</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ X" style="text-decoration:none;color:inherit;">
+            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1\"/></svg>
+          </a>
+          <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ Telegram" style="text-decoration:none;color:inherit;">
+            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <button id="mobileFallbackBuy" type="button" aria-hidden="false">Buy</button>
+
+  <div id="whitepaperPanel" class="wp-panel" role="dialog" aria-modal="true" tabindex="-1">
+    <button id="wpClose" class="wp-close">CLOSE</button>
+    <div class="wp-inner">
+      <div class="wp-content" id="wpContent">
+        <div class="wp-title">GENZ — White Paper</div>
+
+        <div class="wp-section">
+          <h4>Vision</h4>
+          <p>GENZ is built as a community-oriented memecoin with transparent tokenomics and a staged presale. The goal is to give users a fair entry, stable liquidity and opportunities for community rewards and merch.</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Tokenomics</h4>
+          <ul>
+            <li>Total supply: 1,000,000,000 GENZ</li>
+            <li>Presale: 20%</li>
+            <li>Liquidity: 30%</li>
+            <li>Team (vesting): 10%</li>
+            <li>Marketing / Growth: 20%</li>
+            <li>Airdrop / Community: 10%</li>
+          </ul>
+        </div>
+
+        <div class="wp-section">
+          <h4>Roadmap</h4>
+          <ol>
+            <li>Prepare the presale and audit base contracts</li>
+            <li>Listing on DEX/CEX, provide liquidity</li>
+            <li>Large-scale marketing, community events, merch release</li>
+          </ol>
+        </div>
+
+        <div class="wp-section">
+          <h4>Security & Verification</h4>
+          <p>Contracts are published and verified on explorers (Solscan). Never share private keys. An audit is recommended before mass listing.</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Team & Vesting</h4>
+          <p>The team's allocation is locked and distributed according to a pre-announced vesting schedule.</p>
+        </div>
+
+        <div class="wp-section">
+          <h4>Legal & Risk</h4>
+          <p>GENZ does not provide financial guarantees. Participation in the presale carries risks. Investors should perform their own due diligence and consider possible restrictions in their jurisdictions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- load solana web3 (CDN) - single include -->
+  <script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
+
+  <!-- Three.js (for background animation) -->
+  <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
+
+  <!-- 3D coins script (left unchanged except cosmetic) -->
+  <script>
+  (function(){
+    const canvas = document.getElementById('bgCanvas');
+    if (!canvas) return;
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = false;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 90);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const pLight = new THREE.PointLight(0xfff1c8, 0.9, 400);
+    pLight.position.set(40, 30, 60);
+    scene.add(pLight);
+
+    function makeCoinTexture(){
+      const size = 256;
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+
+      ctx.clearRect(0,0,size,size);
+      const cx = size/2, cy = size/2, r = size*0.42;
+      const rg = ctx.createRadialGradient(cx - size*0.06, cy - size*0.06, r*0.1, cx, cy, r);
+      rg.addColorStop(0, '#fff8df');
+      rg.addColorStop(0.45, '#ffd46b');
+      rg.addColorStop(1, '#c78a18');
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI*2);
+      ctx.closePath();
+      ctx.fillStyle = rg;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r*0.88, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 6, 0, Math.PI*2);
+      ctx.lineWidth = size*0.06;
+      ctx.strokeStyle = 'rgba(255,230,120,0.96)';
+      ctx.stroke();
+
+      ctx.font = 'bold 110px "Arial"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#3a2300';
+      ctx.fillText('G', cx, cy + 2);
+
+      const shine = ctx.createLinearGradient(0, 0, size, 0);
+      shine.addColorStop(0, 'rgba(255,255,255,0.18)');
+      shine.addColorStop(0.45, 'rgba(255,255,255,0.02)');
+      shine.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.ellipse(cx - size*0.08, cy - size*0.14, r*0.9, r*0.35, -0.35, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+      ctx.lineWidth = 1.2;
+      for (let i=0;i<8;i++){
+        const a = (i/8) * Math.PI*2;
+        const x1 = cx + Math.cos(a) * (r + 4);
+        const y1 = cy + Math.sin(a) * (r + 4);
+        const x2 = cx + Math.cos(a) * (r + 10);
+        const y2 = cy + Math.sin(a) * (r + 10);
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      tex.minFilter = THREE.LinearMipMapLinearFilter;
+      tex.generateMipmaps = true;
+      return tex;
+    }
+
+    const coinTexture = makeCoinTexture();
+
+    const coinMaterial = new THREE.MeshStandardMaterial({
+      map: coinTexture,
+      metalness: 0.8,
+      roughness: 0.25,
+      transparent: true,
+      side: THREE.DoubleSide,
+      alphaTest: 0.08
+    });
+
+    const COIN_RADIUS = 3.0;
+    const coinGeo = new THREE.CircleGeometry(COIN_RADIUS, 64);
+
+    const COUNT = 60;
+    const inst = new THREE.InstancedMesh(coinGeo, coinMaterial, COUNT);
+    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(inst);
+
+    const states = [];
+    for (let i=0;i<COUNT;i++){
+      const pos = new THREE.Vector3(
+        (Math.random() - 0.5) * 160,
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 160
+      );
+      const tilt = (Math.random() * 0.5) - 0.25;
+      const rot = new THREE.Euler(
+        tilt,
+        Math.random() * Math.PI * 2,
+        (Math.random() * 0.6) - 0.3
+      );
+      const scale = 0.6 + Math.random() * 1.2;
+      const speed = 0.2 + Math.random() * 0.9;
+      const bobPhase = Math.random() * Math.PI * 2;
+      states.push({ pos, rot, scale, speed, bobPhase });
+      const mat = new THREE.Matrix4();
+      mat.compose(pos, new THREE.Quaternion().setFromEuler(rot), new THREE.Vector3(scale, scale, scale));
+      inst.setMatrixAt(i, mat);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+
+    function onResize(){
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    }
+    onResize();
+    window.addEventListener('resize', onResize, {passive:true});
+
+    let mouseX = 0, mouseY = 0;
+    function onMove(e){
+      const x = (e.clientX / window.innerWidth) - 0.5;
+      const y = (e.clientY / window.innerHeight) - 0.5;
+      mouseX = x * 18;
+      mouseY = -y * 8;
+    }
+    window.addEventListener('mousemove', onMove, {passive:true});
+    window.addEventListener('touchmove', (ev)=>{
+      const t = ev.touches && ev.touches[0];
+      if (t) onMove(t);
+    }, {passive:true});
+
+    let last = performance.now();
+    function animate(now){
+      const dt = (now - last) * 0.001;
+      last = now;
+
+      camera.position.x += (mouseX - camera.position.x) * 0.05;
+      camera.position.y += (mouseY - camera.position.y) * 0.05;
+      camera.lookAt(0,0,0);
+
+      const tmpMat = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const posVec = new THREE.Vector3();
+      for (let i=0;i<COUNT;i++){
+        const s = states[i];
+        s.rot.x += 0.12 * dt * s.speed * 0.5;
+        s.rot.y += 0.18 * dt * s.speed * 0.5;
+        s.rot.z += 0.06 * dt * s.speed * 0.5;
+        s.bobPhase += 1.0 * dt * s.speed * 0.6;
+        const bob = Math.sin(s.bobPhase) * (0.5 + s.speed * 0.45);
+        posVec.copy(s.pos);
+        posVec.y += bob;
+        posVec.z += Math.sin(now * 0.0008 + i) * 0.02;
+        q.setFromEuler(s.rot);
+        tmpMat.compose(posVec, q, new THREE.Vector3(s.scale, s.scale, s.scale));
+        inst.setMatrixAt(i, tmpMat);
+      }
+      inst.instanceMatrix.needsUpdate = true;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    window.addEventListener('unload', ()=> {
+      try{ renderer.dispose(); }catch(e){}
+    });
+
+  })();
+  </script>
+
+  <script>
+  (function(){
+
+    /* lightweight helpers */
+    function $(id){ return document.getElementById(id); }
+    function safeAddListener(el, evt, fn, opts){
+      try{ el.addEventListener(evt, fn, opts); } catch(e){ el.addEventListener(evt, fn, false); }
+    }
+
+    /* robust tap installer */
+    function addTap(el, handler){
+      if(!el) return;
+      if(el.__tap_installed) return;
+      el.__tap_installed = true;
+
+      const wrapped = function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+        handler(e);
+      };
+
+      try {
+        el.addEventListener('touchend', wrapped, {passive:false});
+      } catch(err) {
+        el.addEventListener('touchend', wrapped, false);
+      }
+      el.addEventListener('pointerup', wrapped, {passive:false});
+      el.addEventListener('click', wrapped, {passive:false});
+
+      el.style.zIndex = 20000;
+      el.style.pointerEvents = 'auto';
+    }
+
+    // === YOUR SOL ADDRESS ===
+    const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
+
+    // Connection: change 'devnet' for safe testing or 'mainnet-beta' for live
+    const NETWORK = 'mainnet-beta'; // change to 'devnet' while testing
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
+
+    /* function to create the modal (global) — replaced: no "Open in Phantom" deeplink, Pay uses Phantom provider */
+    window.openBuyModal = function(opts){
+      opts = opts || {};
+      if (document.getElementById('__genz_modal')) return; // already open
+
+      // Create overlay and modal
+      const overlay = document.createElement('div'); overlay.id='__genz_modal'; overlay.className='genz-modal-overlay';
+      const box = document.createElement('div'); box.className='genz-modal';
+      overlay.appendChild(box);
+
+      // close button
+      const close = document.createElement('div'); close.className='genz-close'; close.textContent='✕';
+      addTap(close, function(){
+        if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+        overlay.remove();
+      });
+      box.appendChild(close);
+
+      // title/desc
+      const title = document.createElement('h3'); title.textContent = 'Buy GENZ';
+      box.appendChild(title);
+      const desc = document.createElement('div'); desc.className='genz-small';
+      desc.textContent = 'Choose currency and amount. Phantom will be prompted to sign and send the transaction.';
+      box.appendChild(desc);
+
+      // currency toggle
+      const currencyToggle = document.createElement('div'); currencyToggle.className='currency-toggle';
+      const btnSOL = document.createElement('button'); btnSOL.type='button'; btnSOL.textContent='SOL'; btnSOL.dataset.currency='SOL';
+      const btnUSDT = document.createElement('button'); btnUSDT.type='button'; btnUSDT.textContent='USDT'; btnUSDT.dataset.currency='USDT';
+      const btnBTC = document.createElement('button'); btnBTC.type='button'; btnBTC.textContent='BTC'; btnBTC.dataset.currency='BTC';
+      currencyToggle.appendChild(btnSOL); currencyToggle.appendChild(btnUSDT); currencyToggle.appendChild(btnBTC);
+      box.appendChild(currencyToggle);
+
+      // inputs
+      const usdInput = document.createElement('input'); usdInput.className='genz-input'; usdInput.type='number'; usdInput.placeholder='Amount in USD (e.g. 10)';
+      const cryptoInput = document.createElement('input'); cryptoInput.className='genz-input'; cryptoInput.type='number'; cryptoInput.placeholder='Amount in crypto (e.g. 0.01)';
+      box.appendChild(usdInput); box.appendChild(cryptoInput);
+
+      const infoLine = document.createElement('div'); infoLine.className='info-line'; infoLine.textContent = 'Rates: loading...';
+      box.appendChild(infoLine);
+
+      const resultLine = document.createElement('div'); resultLine.className='genz-small'; resultLine.style.fontWeight='700'; resultLine.textContent = 'GENZ: —';
+      box.appendChild(resultLine);
+
+      const row = document.createElement('div'); row.style.marginTop='12px';
+      const payBtn = document.createElement('button'); payBtn.className='genz-btn'; payBtn.textContent='Pay with SOL (Phantom)';
+      const copyBtn = document.createElement('button'); copyBtn.className='genz-secondary'; copyBtn.textContent='Copy recipient address';
+      row.appendChild(payBtn); row.appendChild(copyBtn);
+      box.appendChild(row);
+
+      document.body.appendChild(overlay);
+
+      // --- LIVE RATES: CoinGecko ---
+      let rates = { sol: 25.0, btc: 60000.0, usdt: 1.0 };
+      const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=solana,bitcoin,tether&vs_currencies=usd';
+
+      async function fetchRatesAndUpdateUI(){
+        try {
+          const resp = await fetch(COINGECKO_URL);
+          if (!resp.ok) throw new Error('API ' + resp.status);
+          const data = await resp.json();
+          if (data && data.solana && data.bitcoin && data.tether) {
+            rates.sol = Number(data.solana.usd) || rates.sol;
+            rates.btc = Number(data.bitcoin.usd) || rates.btc;
+            rates.usdt = Number(data.tether.usd) || rates.usdt;
+            infoLine.textContent = `Rates: SOL ≈ $${rates.sol.toFixed(2)}, BTC ≈ $${rates.btc.toFixed(2)}, USDT ≈ $${rates.usdt.toFixed(2)}`;
+          } else {
+            throw new Error('unexpected API response');
+          }
+        } catch (err) {
+          console.warn('Failed to fetch rates:', err);
+          infoLine.textContent = `Rates: unavailable, showing sample values (demo).`;
+        }
+        recompute();
+      }
+
+      // initial fetch + periodic refresh
+      fetchRatesAndUpdateUI();
+      overlay._ratesInterval = setInterval(fetchRatesAndUpdateUI, 60 * 1000);
+
+      // recompute & UI helpers
+      let curr = 'SOL';
+      function setActive(c){
+        curr = c;
+        [btnSOL,btnUSDT,btnBTC].forEach(b => b.classList.toggle('active', b.dataset.currency === c));
+        recompute();
+      }
+      function recompute(){
+        const usd = parseFloat(usdInput.value || 0);
+        const crypto = parseFloat(cryptoInput.value || 0);
+        let usdEffective = usd;
+        if (crypto > 0){
+          if (curr === 'SOL') usdEffective = crypto * rates.sol;
+          else if (curr === 'BTC') usdEffective = crypto * rates.btc;
+          else if (curr === 'USDT') usdEffective = crypto;
+        }
+        const genz = usdEffective > 0 ? Math.floor(usdEffective / 0.0001) : 0;
+        resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${usdEffective.toFixed(2)}) — ${curr}`;
+      }
+
+      [btnSOL,btnUSDT,btnBTC].forEach(b=>{ addTap(b, ()=> { setActive(b.dataset.currency); }); });
+      usdInput.addEventListener('input', ()=> { cryptoInput.value = ''; recompute(); });
+      cryptoInput.addEventListener('input', ()=> { usdInput.value = ''; recompute(); });
+
+      // copy recipient address
+      copyBtn.addEventListener('click', async ()=>{
+        const addr = SOL_ADDRESS || '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
+        try{
+          await navigator.clipboard.writeText(addr);
+          resultLine.textContent = 'Recipient address copied to clipboard.';
+        }catch(e){
+          const ta = document.createElement('textarea'); ta.value = addr; document.body.appendChild(ta); ta.select();
+          try{ document.execCommand('copy'); resultLine.textContent = 'Address copied (fallback).'; }catch(err){ resultLine.textContent = 'Failed to copy. Copy manually: ' + addr; }
+          document.body.removeChild(ta);
+        }
+      });
+
+      // Pay: build real Solana transfer tx and ask Phantom to send it
+      payBtn.addEventListener('click', async ()=>{
+        const usd = parseFloat(usdInput.value||0);
+        const crypto = parseFloat(cryptoInput.value||0);
+        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
+        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter an amount in USD or SOL.'; return; }
+
+        // detect provider (Phantom)
+        const provider = (window.solana && (window.solana.isPhantom ? window.solana : (Array.isArray(window.solana && window.solana.providers) ? window.solana.providers.find(p=>p.isPhantom) : null))) || null;
+
+        // lamports
+        const lamports = Math.round(solAmount * solanaWeb3.LAMPORTS_PER_SOL);
+
+        if (!provider || !provider.isPhantom){
+          // user must install Phantom; do not redirect automatically
+          resultLine.innerHTML = 'Phantom wallet not detected. Please install Phantom and retry.<br><a href="https://phantom.app/" target="_blank" rel="noopener noreferrer">Get Phantom</a>';
+          return;
+        }
+
+        try{
+          resultLine.textContent = 'Connecting to Phantom...';
+          await provider.connect();
+
+          const fromPubkey = provider.publicKey;
+          if (!fromPubkey){
+            resultLine.textContent = 'Failed to obtain public key from Phantom.';
+            return;
+          }
+
+          resultLine.textContent = 'Building transaction...';
+          const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
+
+          const tx = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+              fromPubkey: fromPubkey,
+              toPubkey: toPubkey,
+              lamports: lamports
+            })
+          );
+
+          // set fee payer & recent blockhash
+          tx.feePayer = fromPubkey;
+          const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+          tx.recentBlockhash = blockhash;
+
+          resultLine.textContent = 'Opening Phantom for signing and sending the transaction...';
+
+          // Try provider.sendTransaction (recommended) or fallback to sign & send
+          if (typeof provider.sendTransaction === 'function'){
+            const signature = await provider.sendTransaction(tx, connection);
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else if (typeof provider.signAndSendTransaction === 'function'){
+            const signed = await provider.signAndSendTransaction(tx);
+            const signature = signed && (signed.signature || signed);
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else if (typeof provider.signTransaction === 'function'){
+            const signedTx = await provider.signTransaction(tx);
+            const raw = signedTx.serialize();
+            const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else {
+            resultLine.textContent = 'Phantom is installed but does not support required methods. Update Phantom or try another provider.';
+          }
+
+        }catch(err){
+          console.error(err);
+          resultLine.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+        }
+      });
+
+      // default active
+      setActive('SOL');
+
+      // close on overlay click outside modal (clear interval too)
+      overlay.addEventListener('click', function(e){
+        if (e.target === overlay) {
+          if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+          overlay.remove();
+        }
+      });
+
+      return overlay;
+    }; // openBuyModal
+
+    /* attach handlers to Buy buttons and nav Buy with robust listeners */
+    function attachAllBuyHandlers(){
+      const simple = $('simpleBuy');
+      if (simple) addTap(simple, function(){ openBuyModal({ autoTier: null }); });
+
+      const navBuy = $('navBuy');
+      if (navBuy) addTap(navBuy, function(){ openBuyModal({ autoTier: null }); });
+
+      const fallback = $('mobileFallbackBuy');
+      if (fallback) addTap(fallback, function(){ openBuyModal({ autoTier: null }); });
+
+      // touchend fallback for simpleBuy region
+      document.addEventListener('touchend', function(e){
+        if (document.getElementById('__genz_modal')) return;
+        const t = e.changedTouches && e.changedTouches[0];
+        if (!t) return;
+        const x = t.clientX, y = t.clientY;
+        const el = $('simpleBuy');
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8){
+          openBuyModal({ autoTier: null });
+        }
+      }, {passive:true});
+    }
+
+    if (document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', attachAllBuyHandlers);
+    } else {
+      attachAllBuyHandlers();
+    }
+
+    // ensure nav visible on desktop
+    (function ensureNavVisible(){
+      const nav = document.getElementById('mainNav');
+      if (nav){
+        nav.style.display = 'flex';
+        nav.style.visibility = 'visible';
+      }
+    })();
+
+    // subscribe form minimal
+    if (document.getElementById('subscribeForm')){
+      document.getElementById('subscribeForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const email = (document.getElementById('email')||{}).value || '';
+        const msg = document.getElementById('subMsg');
+        if (!email.trim()){ if(msg) msg.textContent = 'Enter email.'; return; }
+        if(msg) msg.textContent = 'Subscription accepted (stub).';
+      });
+    }
+
+    // Whitepaper download (excerpt)
+    const whiteText = [
+"GENZ — White Paper (excerpt)",
+"",
+"1. Vision",
+"GENZ aims to be a community-driven memecoin with clear tokenomics, staged presale and a focus on transparency.",
+"",
+"2. Tokenomics (summary)",
+"- Total supply: 1,000,000,000",
+"- Presale: 20%",
+"- Liquidity: 30%",
+"- Team (vesting): 10%",
+"- Marketing / Growth: 20%",
+"- Airdrop / Community: 10%",
+"",
+"3. Roadmap (high level)",
+"- Presale & private listings",
+"- CEX / DEX listings, liquidity add",
+"- Marketing push, community events, merch",
+"",
+"4. Security & Verification",
+"Publish verified contract addresses on explorers prior to presale. Do not share private keys.",
+"",
+"— End of excerpt —"
+].join("\n");
+
+    const dwBtn = $('downloadWhitepaper');
+    if (dwBtn){
+      dwBtn.addEventListener('click', function(){
+        const blob = new Blob([whiteText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'GENZ_WhitePaper.txt';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    // Fullscreen whitepaper panel handlers (simplified)
+    var openFullBtn = $('openWhitepaperFull');
+    var wpPanel = $('whitepaperPanel');
+    var wpClose = $('wpClose');
+    if (openFullBtn && wpPanel){
+      addTap(openFullBtn, function(){
+        wpPanel.style.display = 'block';
+        wpPanel.focus();
+        document.body.style.overflow = 'hidden';
+      });
+    }
+    if (wpClose && wpPanel){
+      addTap(wpClose, function(){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; });
+    }
+    if (wpPanel){
+      wpPanel.addEventListener('click', function(e){ if (e.target === wpPanel) { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
+      wpPanel.addEventListener('keydown', function(e){ if (e.key === 'Escape') { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
+    }
+
+    // small accessibility: close modal with ESC globally when open
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (wpPanel && wpPanel.style.display === 'block'){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; } const gm = document.getElementById('__genz_modal'); if (gm) gm.remove(); } });
+
+    console.log('Handlers installed — Buy modal updated (no deeplink).');
+
+  })();
+  </script>
+</body>
+</html>
