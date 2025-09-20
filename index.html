@@ -20,10 +20,8 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#fff;background-color:var(--bg1);position:relative;overflow-x:hidden}
-    /* background image layer (kept) */
     .bg{position:fixed;inset:0;background-image:url('./img/IMG_0606.PNG');background-size:cover;background-position:center;z-index:0;filter:saturate(0.9) contrast(0.9);transform:translateZ(0)}
     .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.75),rgba(2,8,25,0.85));z-index:1;pointer-events:none}
-    /* canvas for 3D coins (on top of background, below content) */
     #bgCanvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none; }
     .wrap{max-width:var(--maxw);margin:28px auto;padding:24px;position:relative;z-index:2}
     header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
@@ -52,7 +50,6 @@
     .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.25);color:#fff;flex:1}
     @media(max-width:600px){h1{font-size:22px}.logo{width:86px;height:86px}.logo img{width:100%;height:100%;transform:none}}
 
-    /* modal */
     .genz-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:20000}
     .genz-modal{width:520px;max-width:95%;background:var(--panel-bg);border-radius:12px;padding:18px;color:#fff;position:relative;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
     .genz-close{position:absolute;right:12px;top:8px;cursor:pointer;color:#ffd60a;font-weight:700}
@@ -61,13 +58,11 @@
     .genz-secondary{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#fff;margin-left:8px}
     .genz-small{font-size:13px;color:rgba(255,255,255,0.75);margin-top:8px}
 
-    /* currency toggle */
     .currency-toggle{display:flex;gap:8px;margin-top:8px}
     .currency-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6;cursor:pointer}
     .currency-toggle button.active{background:#07263a;color:#fff;border-color:rgba(125,211,252,0.28);box-shadow:0 4px 14px rgba(7,38,58,0.6)}
     .info-line{color:var(--muted-weak);margin-top:10px}
 
-    /* NAV always visible and mobile-friendly */
     nav#mainNav {display:flex;gap:12px;align-items:center;max-width: 100%;overflow-x: auto;-webkit-overflow-scrolling: touch;padding: 6px 0;flex-wrap: nowrap}
     nav#mainNav a { white-space: nowrap; color: #e6eef6; text-decoration: none; padding:8px 10px; border-radius:10px; transition: all .12s; }
     nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
@@ -78,7 +73,6 @@
       #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
     }
 
-    /* socials */
     .socials { display:flex; gap:8px; align-items:center; margin-left:8px; }
     .socials a { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; transition:all .12s; }
     .socials a:hover { transform:translateY(-2px); background: rgba(255,255,255,0.04); }
@@ -89,14 +83,10 @@
     .socials-side svg { width:18px; height:18px; fill: #e6eef6; }
     #mobileFallbackBuy { display: none; position: fixed; right: 14px; bottom: 18px; z-index: 25000; background: linear-gradient(135deg,#ffd60a,#ffb300); color:#071025; padding: 12px 14px; border-radius: 14px; font-weight:800; box-shadow: 0 8px 30px rgba(0,0,0,0.45); border: none; }
 
-    /* Whitepaper fullscreen panel:
-       uses the requested photo as background (cover), with a dark gradient overlay
-       so the text stays readable on top of the image. */
     .wp-panel { position:fixed; inset:0; z-index:30000; display:none; background:linear-gradient(180deg, rgba(2,6,23,0.95), rgba(2,6,23,0.98)); }
     .wp-inner { 
       max-width:1200px; 
       margin:48px auto; 
-      /* photo as background + dark gradient overlay for contrast */
       background: linear-gradient(180deg, rgba(6,10,20,0.92), rgba(6,10,20,0.6)), url('./img/41bef794-cc43-4dc0-a9cf-6504b5b0db48-wm.png'); 
       background-size: cover; 
       background-position: center; 
@@ -122,9 +112,7 @@
   </style>
 </head>
 <body>
-  <!-- canvas for 3D animated coins (added) -->
   <canvas id="bgCanvas" aria-hidden="true"></canvas>
-
   <div class="bg" aria-hidden="true"></div>
 
   <div class="wrap">
@@ -232,7 +220,7 @@
           </div>
           <div style="display:flex;gap:8px;margin-top:12px">
             <button id="downloadWhitepaper" class="btn">Download White Paper</button>
-            <!-- inline view removed as requested -->
+            <!-- fullscreen whitepaper remains -->
             <button id="openWhitepaperFull" class="btn" style="background:linear-gradient(135deg,#7dd3fc,#4fd1c5);color:#02121a">Open White Paper (Fullscreen)</button>
           </div>
         </div>
@@ -297,10 +285,8 @@
     </footer>
   </div>
 
-  <!-- floating fallback buy (visible on mobile) -->
   <button id="mobileFallbackBuy" type="button" aria-hidden="false">Buy</button>
 
-  <!-- Whitepaper fullscreen panel -->
   <div id="whitepaperPanel" class="wp-panel" role="dialog" aria-modal="true" tabindex="-1">
     <button id="wpClose" class="wp-close">CLOSE</button>
     <div class="wp-inner">
@@ -357,43 +343,34 @@
   <!-- Three.js (for background animation) -->
   <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
 
-  <!-- 3D coins script (instanced circular coins, slightly smaller) -->
+  <!-- 3D coins script (left unchanged except cosmetic) -->
   <script>
   (function(){
     const canvas = document.getElementById('bgCanvas');
     if (!canvas) return;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = false;
 
-    // Scene + Camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 90);
 
-    // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const pLight = new THREE.PointLight(0xfff1c8, 0.9, 400);
     pLight.position.set(40, 30, 60);
     scene.add(pLight);
 
-    // --- coin texture (transparent outside circle) ---
     function makeCoinTexture(){
       const size = 256;
       const c = document.createElement('canvas');
       c.width = c.height = size;
       const ctx = c.getContext('2d');
 
-      // clear (transparent background)
       ctx.clearRect(0,0,size,size);
-
-      // center
       const cx = size/2, cy = size/2, r = size*0.42;
-
-      // radial metallic fill
       const rg = ctx.createRadialGradient(cx - size*0.06, cy - size*0.06, r*0.1, cx, cy, r);
       rg.addColorStop(0, '#fff8df');
       rg.addColorStop(0.45, '#ffd46b');
@@ -405,27 +382,23 @@
       ctx.fillStyle = rg;
       ctx.fill();
 
-      // inner subtle shadow
       ctx.beginPath();
       ctx.arc(cx, cy, r*0.88, 0, Math.PI*2);
       ctx.fillStyle = 'rgba(0,0,0,0.06)';
       ctx.fill();
 
-      // rim stroke
       ctx.beginPath();
       ctx.arc(cx, cy, r + 6, 0, Math.PI*2);
       ctx.lineWidth = size*0.06;
       ctx.strokeStyle = 'rgba(255,230,120,0.96)';
       ctx.stroke();
 
-      // Letter G
       ctx.font = 'bold 110px "Arial"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#3a2300';
       ctx.fillText('G', cx, cy + 2);
 
-      // subtle highlight
       const shine = ctx.createLinearGradient(0, 0, size, 0);
       shine.addColorStop(0, 'rgba(255,255,255,0.18)');
       shine.addColorStop(0.45, 'rgba(255,255,255,0.02)');
@@ -435,7 +408,6 @@
       ctx.ellipse(cx - size*0.08, cy - size*0.14, r*0.9, r*0.35, -0.35, 0, Math.PI*2);
       ctx.fill();
 
-      // optional: tiny engraved marks
       ctx.strokeStyle = 'rgba(0,0,0,0.06)';
       ctx.lineWidth = 1.2;
       for (let i=0;i<8;i++){
@@ -459,7 +431,6 @@
 
     const coinTexture = makeCoinTexture();
 
-    // Material — allow alpha (transparent outside circle)
     const coinMaterial = new THREE.MeshStandardMaterial({
       map: coinTexture,
       metalness: 0.8,
@@ -469,17 +440,14 @@
       alphaTest: 0.08
     });
 
-    // Geometry: Circle (slightly smaller than before)
-    const COIN_RADIUS = 3.0; // slightly smaller
+    const COIN_RADIUS = 3.0;
     const coinGeo = new THREE.CircleGeometry(COIN_RADIUS, 64);
 
-    // Instanced mesh
     const COUNT = 60;
     const inst = new THREE.InstancedMesh(coinGeo, coinMaterial, COUNT);
     inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     scene.add(inst);
 
-    // per-instance state
     const states = [];
     for (let i=0;i<COUNT;i++){
       const pos = new THREE.Vector3(
@@ -503,7 +471,6 @@
     }
     inst.instanceMatrix.needsUpdate = true;
 
-    // resize handling
     function onResize(){
       renderer.setSize(window.innerWidth, window.innerHeight, false);
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -512,7 +479,6 @@
     onResize();
     window.addEventListener('resize', onResize, {passive:true});
 
-    // parallax
     let mouseX = 0, mouseY = 0;
     function onMove(e){
       const x = (e.clientX / window.innerWidth) - 0.5;
@@ -526,18 +492,15 @@
       if (t) onMove(t);
     }, {passive:true});
 
-    // animation loop
     let last = performance.now();
     function animate(now){
       const dt = (now - last) * 0.001;
       last = now;
 
-      // camera slight parallax movement
       camera.position.x += (mouseX - camera.position.x) * 0.05;
       camera.position.y += (mouseY - camera.position.y) * 0.05;
       camera.lookAt(0,0,0);
 
-      // update instanced matrices (rotation + bob)
       const tmpMat = new THREE.Matrix4();
       const q = new THREE.Quaternion();
       const posVec = new THREE.Vector3();
@@ -562,7 +525,6 @@
     }
     requestAnimationFrame(animate);
 
-    // cleanup on unload
     window.addEventListener('unload', ()=> {
       try{ renderer.dispose(); }catch(e){}
     });
@@ -609,7 +571,7 @@
     const NETWORK = 'mainnet-beta'; // change to 'devnet' while testing
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl(NETWORK), 'confirmed');
 
-    /* function to create the modal (global) */
+    /* function to create the modal (global) — replaced: no "Open in Phantom" deeplink, Pay uses Phantom provider */
     window.openBuyModal = function(opts){
       opts = opts || {};
       if (document.getElementById('__genz_modal')) return; // already open
@@ -622,7 +584,6 @@
       // close button
       const close = document.createElement('div'); close.className='genz-close'; close.textContent='✕';
       addTap(close, function(){
-        // clear interval if exists and remove modal
         if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
         overlay.remove();
       });
@@ -656,16 +617,14 @@
 
       const row = document.createElement('div'); row.style.marginTop='12px';
       const payBtn = document.createElement('button'); payBtn.className='genz-btn'; payBtn.textContent='Pay with SOL (Phantom)';
-      const openPhantomBtn = document.createElement('button'); openPhantomBtn.className='genz-secondary'; openPhantomBtn.textContent='Open in Phantom';
-      const copyBtn = document.createElement('button'); copyBtn.className='genz-secondary'; copyBtn.textContent='Copy address (USDT/BTC)';
-      row.appendChild(payBtn); row.appendChild(openPhantomBtn); row.appendChild(copyBtn);
+      const copyBtn = document.createElement('button'); copyBtn.className='genz-secondary'; copyBtn.textContent='Copy recipient address';
+      row.appendChild(payBtn); row.appendChild(copyBtn);
       box.appendChild(row);
 
       document.body.appendChild(overlay);
 
       // --- LIVE RATES: CoinGecko ---
       let rates = { sol: 25.0, btc: 60000.0, usdt: 1.0 };
-      let ratesFetched = false;
       const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=solana,bitcoin,tether&vs_currencies=usd';
 
       async function fetchRatesAndUpdateUI(){
@@ -677,7 +636,6 @@
             rates.sol = Number(data.solana.usd) || rates.sol;
             rates.btc = Number(data.bitcoin.usd) || rates.btc;
             rates.usdt = Number(data.tether.usd) || rates.usdt;
-            ratesFetched = true;
             infoLine.textContent = `Rates: SOL ≈ $${rates.sol.toFixed(2)}, BTC ≈ $${rates.btc.toFixed(2)}, USDT ≈ $${rates.usdt.toFixed(2)}`;
           } else {
             throw new Error('unexpected API response');
@@ -713,37 +671,21 @@
         resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${usdEffective.toFixed(2)}) — ${curr}`;
       }
 
-      [btnSOL,btnUSDT,btnBTC].forEach(b=>{
-        addTap(b, ()=> { setActive(b.dataset.currency); });
-      });
+      [btnSOL,btnUSDT,btnBTC].forEach(b=>{ addTap(b, ()=> { setActive(b.dataset.currency); }); });
       usdInput.addEventListener('input', ()=> { cryptoInput.value = ''; recompute(); });
       cryptoInput.addEventListener('input', ()=> { usdInput.value = ''; recompute(); });
 
-      // fallback copy
+      // copy recipient address
       copyBtn.addEventListener('click', async ()=>{
-        let addr = '';
-        if (curr === 'USDT') addr = '0x...USDT';
-        else if (curr === 'BTC') addr = 'bc1qexamplebtcaddress...';
-        else addr = SOL_ADDRESS;
+        const addr = SOL_ADDRESS || '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
         try{
           await navigator.clipboard.writeText(addr);
-          resultLine.textContent = 'Address copied to clipboard.';
+          resultLine.textContent = 'Recipient address copied to clipboard.';
         }catch(e){
           const ta = document.createElement('textarea'); ta.value = addr; document.body.appendChild(ta); ta.select();
           try{ document.execCommand('copy'); resultLine.textContent = 'Address copied (fallback).'; }catch(err){ resultLine.textContent = 'Failed to copy. Copy manually: ' + addr; }
           document.body.removeChild(ta);
         }
-      });
-
-      // Open in Phantom deep-link (manual fallback)
-      openPhantomBtn.addEventListener('click', ()=>{
-        if (curr !== 'SOL'){ resultLine.textContent = 'Open in Phantom for SOL only.'; return; }
-        const usd = parseFloat(usdInput.value||0);
-        const crypto = parseFloat(cryptoInput.value||0);
-        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
-        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter an amount in USD or SOL.'; return; }
-        const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
-        window.location.href = url;
       });
 
       // Pay: build real Solana transfer tx and ask Phantom to send it
@@ -759,78 +701,75 @@
         // lamports
         const lamports = Math.round(solAmount * solanaWeb3.LAMPORTS_PER_SOL);
 
-        if (provider && provider.isPhantom){
-          try{
-            resultLine.textContent = 'Connecting Phantom...';
-            await provider.connect();
+        if (!provider || !provider.isPhantom){
+          // user must install Phantom; do not redirect automatically
+          resultLine.innerHTML = 'Phantom wallet not detected. Please install Phantom and retry.<br><a href="https://phantom.app/" target="_blank" rel="noopener noreferrer">Get Phantom</a>';
+          return;
+        }
 
-            const fromPubkey = provider.publicKey;
-            if (!fromPubkey){
-              resultLine.textContent = 'Failed to get public key from Phantom.';
-              return;
-            }
+        try{
+          resultLine.textContent = 'Connecting to Phantom...';
+          await provider.connect();
 
-            resultLine.textContent = 'Building transaction...';
-
-            const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
-
-            // create transaction and transfer instruction
-            const tx = new solanaWeb3.Transaction().add(
-              solanaWeb3.SystemProgram.transfer({
-                fromPubkey: fromPubkey,
-                toPubkey: toPubkey,
-                lamports: lamports
-              })
-            );
-
-            // set fee payer & recent blockhash
-            tx.feePayer = fromPubkey;
-            const { blockhash } = await connection.getLatestBlockhash();
-            tx.recentBlockhash = blockhash;
-
-            resultLine.textContent = 'Opening Phantom for signing and sending the transaction...';
-
-            // Try provider.sendTransaction (recommended) or fallback to sign & send
-            if (typeof provider.sendTransaction === 'function'){
-              const signature = await provider.sendTransaction(tx, connection);
-              resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-              await connection.confirmTransaction(signature, 'confirmed');
-              resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-              // clear interval
-              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-            } else if (typeof provider.signAndSendTransaction === 'function'){
-              const signed = await provider.signAndSendTransaction(tx);
-              const signature = signed && (signed.signature || signed);
-              resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-              await connection.confirmTransaction(signature, 'confirmed');
-              resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-            } else if (typeof provider.signTransaction === 'function'){
-              const signedTx = await provider.signTransaction(tx);
-              const raw = signedTx.serialize();
-              const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
-              resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
-              const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
-              await connection.confirmTransaction(signature, 'confirmed');
-              resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
-              if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-            } else {
-              resultLine.textContent = 'Phantom is installed but does not support required methods. Use the "Open in Phantom" button or deeplink.';
-            }
-
-          }catch(err){
-            console.error(err);
-            resultLine.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+          const fromPubkey = provider.publicKey;
+          if (!fromPubkey){
+            resultLine.textContent = 'Failed to obtain public key from Phantom.';
+            return;
           }
-        } else {
-          // fallback deep link if provider not found (mobile / no extension)
-          resultLine.textContent = 'Phantom not found — opening payment link.';
-          const url = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(solAmount);
-          // clear interval before redirect
-          if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
-          window.location.href = url;
+
+          resultLine.textContent = 'Building transaction...';
+          const toPubkey = new solanaWeb3.PublicKey(SOL_ADDRESS);
+
+          const tx = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+              fromPubkey: fromPubkey,
+              toPubkey: toPubkey,
+              lamports: lamports
+            })
+          );
+
+          // set fee payer & recent blockhash
+          tx.feePayer = fromPubkey;
+          const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+          tx.recentBlockhash = blockhash;
+
+          resultLine.textContent = 'Opening Phantom for signing and sending the transaction...';
+
+          // Try provider.sendTransaction (recommended) or fallback to sign & send
+          if (typeof provider.sendTransaction === 'function'){
+            const signature = await provider.sendTransaction(tx, connection);
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else if (typeof provider.signAndSendTransaction === 'function'){
+            const signed = await provider.signAndSendTransaction(tx);
+            const signature = signed && (signed.signature || signed);
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else if (typeof provider.signTransaction === 'function'){
+            const signedTx = await provider.signTransaction(tx);
+            const raw = signedTx.serialize();
+            const signature = await connection.sendRawTransaction(raw, { skipPreflight: false });
+            resultLine.innerHTML = 'Transaction sent, awaiting confirmation... txid: <code>' + signature + '</code>';
+            const explorerUrl = 'https://explorer.solana.com/tx/' + signature + (NETWORK === 'devnet' ? '?cluster=devnet' : '');
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            resultLine.innerHTML = 'Payment confirmed. <a href="' + explorerUrl + '" target="_blank" rel="noopener noreferrer">View in Explorer</a><br><small>txid: ' + signature + '</small>';
+            if (overlay._ratesInterval) { clearInterval(overlay._ratesInterval); overlay._ratesInterval = null; }
+            return;
+          } else {
+            resultLine.textContent = 'Phantom is installed but does not support required methods. Update Phantom or try another provider.';
+          }
+
+        }catch(err){
+          console.error(err);
+          resultLine.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
         }
       });
 
@@ -960,7 +899,7 @@
     // small accessibility: close modal with ESC globally when open
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (wpPanel && wpPanel.style.display === 'block'){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; } const gm = document.getElementById('__genz_modal'); if (gm) gm.remove(); } });
 
-    console.log('Handlers installed — Whitepaper fullscreen with background image (no inline view).');
+    console.log('Handlers installed — Buy modal updated (no deeplink).');
 
   })();
   </script>
