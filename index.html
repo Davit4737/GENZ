@@ -110,6 +110,31 @@
       .wp-title { font-size:20px; }
     }
 
+    /* modal warning */
+    .buy-warning {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background: linear-gradient(90deg, rgba(255,214,107,0.04), rgba(255,179,0,0.02));
+      color: var(--yellow-1);
+      padding:8px 10px;
+      border-radius:10px;
+      font-weight:700;
+      font-size:13px;
+      border: 1px solid rgba(255,214,107,0.12);
+      width:100%;
+    }
+    .buy-warning strong { font-weight:900; color:transparent; background:linear-gradient(90deg,#ffd60a,#ffb300); -webkit-background-clip:text; background-clip:text; }
+
+    /* timer styles */
+    .launch-timer { width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:8px; }
+    .lt-label { font-size:13px; color:var(--muted-weak); font-weight:700; letter-spacing:0.6px; text-transform:uppercase; }
+    .lt-wrap { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .lt-item { display:flex; flex-direction:column; align-items:center; min-width:68px; padding:10px 12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008)); border:1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.5); }
+    .lt-num { font-size:26px; font-weight:900; line-height:1; background: linear-gradient(90deg, #ffd60a, #7dd3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lt-unit { font-size:12px; color:var(--muted-weak); margin-top:6px; text-transform:uppercase; letter-spacing:0.6px; }
+    @media(max-width:600px){ .lt-num { font-size:20px; } .buy-warning { font-size:12px; padding:6px 8px; } }
+
   </style>
 </head>
 <body>
@@ -175,6 +200,7 @@
 
           <div style="margin-top:18px" id="buy">
             <div class="muted small">Presale status</div>
+            <!-- countdown filled by JS (30 days persistent timer) -->
             <div class="countdown" id="countdown"><!-- JS fills --></div>
 
             <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px">
@@ -350,7 +376,7 @@
   <!-- Three.js (for background animation) -->
   <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
 
-  <!-- 3D coins script (left unchanged except cosmetic) -->
+  <!-- 3D coins script (left unchanged) -->
   <script>
   (function(){
     const canvas = document.getElementById('bgCanvas');
@@ -621,7 +647,7 @@
       console.log('--- END DEBUG ---');
     }
 
-    /* function to create the modal (global) — improved: waits for provider, network selection */
+    /* function to create the modal (global) — improved: waits for provider */
     window.openBuyModal = async function(opts){
       opts = opts || {};
       if (document.getElementById('__genz_modal')) return; // already open
@@ -668,6 +694,23 @@
       const desc = document.createElement('div'); desc.className='genz-small';
       desc.textContent = 'Choose currency and amount. Phantom will be prompted to sign and send the transaction (or deeplink will be opened).';
       box.appendChild(desc);
+
+      // === WARNING: inserted into modal only ===
+      const warn = document.createElement('div');
+      warn.className = 'buy-warning';
+      warn.setAttribute('role', 'status');
+      warn.setAttribute('aria-live', 'polite');
+      warn.innerHTML = 'Send with Memo: <strong>GENZ</strong> — otherwise you will lose all funds';
+      warn.style.marginTop = '10px';
+      box.appendChild(warn);
+      // === END WARNING ===
+
+      // single fee sentence (kept exactly as requested)
+      const feeNoteOnly = document.createElement('div');
+      feeNoteOnly.className = 'genz-small';
+      feeNoteOnly.style.marginTop = '10px';
+      feeNoteOnly.textContent = 'Fees are paid by buyer and go to the recipient address.';
+      box.appendChild(feeNoteOnly);
 
       // currency toggle
       const currencyToggle = document.createElement('div'); currencyToggle.className='currency-toggle';
@@ -727,7 +770,7 @@
       fetchRatesAndUpdateUI();
       overlay._ratesInterval = setInterval(fetchRatesAndUpdateUI, 60 * 1000);
 
-      // recompute & UI helpers
+      // recompute & UI helpers (NO fee logic)
       let curr = 'SOL';
       function setActive(c){
         curr = c;
@@ -743,7 +786,9 @@
           else if (curr === 'BTC') usdEffective = crypto * rates.btc;
           else if (curr === 'USDT') usdEffective = crypto;
         }
+        // GENZ tokens computed off USD amount user wants to buy (no fee)
         const genz = usdEffective > 0 ? Math.floor(usdEffective / 0.0001) : 0;
+
         resultLine.textContent = `GENZ: ${genz.toLocaleString()} (≈ $${usdEffective.toFixed(2)}) — ${curr}`;
       }
 
@@ -771,17 +816,31 @@
         debugSmall.textContent = 'Network switched to ' + NETWORK;
       });
 
-      // deeplink handler (explicit)
+      // deeplink handler (explicit) — NO fee added
       openPhantomBtn.addEventListener('click', ()=>{
         const usd = parseFloat(usdInput.value||0);
         const crypto = parseFloat(cryptoInput.value||0);
-        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / rates.sol) : 0);
-        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter an amount in USD or SOL.'; return; }
-        const amountStr = String(Number(solAmount));
-        let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
-        if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
-        window.open(deeplink, '_blank');
-        resultLine.innerHTML = 'Opened deeplink — on mobile this should open the Phantom app; on desktop it opens Phantom page.';
+        let usdEffective = usd;
+        if (crypto > 0){
+          if (curr === 'SOL') usdEffective = crypto * rates.sol;
+          else if (curr === 'BTC') usdEffective = crypto * rates.btc;
+          else if (curr === 'USDT') usdEffective = crypto;
+        }
+        if (!usdEffective || usdEffective <= 0){ resultLine.textContent = 'Enter an amount in USD or crypto.'; return; }
+
+        if (curr === 'SOL'){
+          const solAmount = usdEffective / rates.sol;
+          const amountStr = String(Number(solAmount));
+          let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
+          if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
+          window.open(deeplink, '_blank');
+          resultLine.innerHTML = `Opened deeplink — send <strong>${amountStr} SOL</strong>.`;
+        } else {
+          const unit = curr;
+          const cryptoAmount = curr === 'USDT' ? usdEffective / rates.usdt : usdEffective / rates.btc;
+          resultLine.innerHTML = `Send <strong>${cryptoAmount.toFixed(6)} ${unit}</strong> to <code>${SOL_ADDRESS}</code>. Note: deeplink supports SOL only; send ${unit} manually.`;
+        }
+
       });
 
       // PAY handler — wait for provider then try to send transaction
@@ -791,10 +850,24 @@
 
         const usd = parseFloat(usdInput.value||0);
         const crypto = parseFloat(cryptoInput.value||0);
+        let usdEffective = usd;
+        if (crypto > 0){
+          if (curr === 'SOL') usdEffective = crypto * rates.sol;
+          else if (curr === 'BTC') usdEffective = crypto * rates.btc;
+          else if (curr === 'USDT') usdEffective = crypto;
+        }
+        if (!usdEffective || usdEffective <= 0){ resultLine.textContent = 'Enter an amount in USD or crypto.'; return; }
+
+        // Only SOL sending via Phantom is automated here
+        if (curr !== 'SOL'){
+          resultLine.innerHTML = `Automatic Pay supports SOL only. To pay in ${curr}, use manual transfer of equivalent amount: $${usdEffective.toFixed(2)}.`;
+          return;
+        }
+
         // try fetch rate quickly
         let solRateLocal = rates.sol || 25;
-        let solAmount = crypto > 0 ? crypto : (usd > 0 ? (usd / solRateLocal) : 0);
-        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Enter an amount in USD or SOL.'; return; }
+        let solAmount = usdEffective / solRateLocal;
+        if (!solAmount || solAmount <= 0){ resultLine.textContent = 'Invalid SOL amount.'; return; }
 
         resultLine.textContent = 'Searching for Phantom provider (waiting up to 7s)...';
         const provider = await waitForProvider(7000);
@@ -803,7 +876,6 @@
           printDebugToConsole();
           try {
             resultLine.textContent = 'Phantom detected — requesting connect...';
-            // ensure provider connected (may throw if user rejects)
             try { await provider.connect(); } catch(e){ /* ignore, may be already connected */ }
 
             if (!provider.publicKey){
@@ -822,6 +894,9 @@
                 lamports: lamports
               })
             );
+
+            // Note: We intentionally do NOT add a Memo instruction here.
+            // The modal contains a clear textual requirement that user must include Memo = "GENZ" — if you want the transaction to carry the memo automatically, that can be added later.
 
             tx.feePayer = fromPubkey;
             const conn = getConnection();
@@ -871,7 +946,7 @@
           }
         }
 
-        // No provider found -> deeplink fallback
+        // No provider found -> deeplink fallback (SOL)
         const amountStr = String(Number(solAmount));
         let deeplink = 'https://phantom.app/ul/transfer?address=' + encodeURIComponent(SOL_ADDRESS) + '&amount=' + encodeURIComponent(amountStr);
         if (NETWORK === 'devnet') deeplink += '&cluster=devnet';
@@ -1010,10 +1085,68 @@
     // small accessibility: close modal with ESC globally when open
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (wpPanel && wpPanel.style.display === 'block'){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; } const gm = document.getElementById('__genz_modal'); if (gm) gm.remove(); } });
 
-    console.log('Handlers installed — Buy modal improved (provider detection + deeplink fallback).');
+    console.log('Handlers installed — Buy modal updated (fee UI removed, memo warning kept).');
+
+    /* =========== PumpFun 30-day persistent launch timer logic =========== */
+    (function initLaunchTimer(){
+      const countdown = document.getElementById('countdown');
+      if (!countdown) return;
+
+      const KEY = 'genz_launch_ts';
+      const stored = localStorage.getItem(KEY);
+      let target;
+      if (stored){
+        const ts = parseInt(stored, 10);
+        if (!isNaN(ts) && ts > Date.now()) {
+          target = ts;
+        } else {
+          target = Date.now() + 30 * 24 * 60 * 60 * 1000;
+          localStorage.setItem(KEY, String(target));
+        }
+      } else {
+        target = Date.now() + 30 * 24 * 60 * 60 * 1000;
+        localStorage.setItem(KEY, String(target));
+      }
+
+      countdown.innerHTML = `\n        <div class="launch-timer" aria-live="polite">\n          <div class="lt-label">Launching on PumpFun in</div>\n          <div class="lt-wrap" role="timer" aria-atomic="true">\n            <div class="lt-item"><div class="lt-num" id="lt-days">30</div><div class="lt-unit">Days</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-hours">00</div><div class="lt-unit">Hours</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-mins">00</div><div class="lt-unit">Minutes</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-secs">00</div><div class="lt-unit">Seconds</div></div>\n          </div>\n        </div>\n      `;
+
+      function pad(n){ return String(n).padStart(2,'0'); }
+
+      function update(){
+        const now = Date.now();
+        let diff = Math.max(0, target - now);
+
+        if (diff <= 0){
+          document.getElementById('lt-days').textContent = '00';
+          document.getElementById('lt-hours').textContent = '00';
+          document.getElementById('lt-mins').textContent = '00';
+          document.getElementById('lt-secs').textContent = '00';
+          const label = countdown.querySelector('.lt-label');
+          if (label) label.textContent = 'Launched on PumpFun!';
+          clearInterval(intervalId);
+          return;
+        }
+
+        const days = Math.floor(diff / 86400000);
+        diff -= days * 86400000;
+        const hours = Math.floor(diff / 3600000);
+        diff -= hours * 3600000;
+        const mins = Math.floor(diff / 60000);
+        diff -= mins * 60000;
+        const secs = Math.floor(diff / 1000);
+
+        document.getElementById('lt-days').textContent = pad(days);
+        document.getElementById('lt-hours').textContent = pad(hours);
+        document.getElementById('lt-mins').textContent = pad(mins);
+        document.getElementById('lt-secs').textContent = pad(secs);
+      }
+
+      update();
+      const intervalId = setInterval(update, 1000);
+    })();
+    /* =========== end launch timer =========== */
 
   })();
   </script>
 </body>
 </html>
-
