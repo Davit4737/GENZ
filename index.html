@@ -240,7 +240,7 @@
           <div style="margin-top:12px">
             <div class="socials-side" aria-hidden="false">
               <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ on X">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
                 <span style="margin-left:8px">X</span>
               </a>
               <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ on Telegram">
@@ -680,26 +680,36 @@
     (function initLaunchTimer(){
       const countdown = document.getElementById('countdown');
       if (!countdown) return;
+
+      // Фиксированный момент запуска: 26 Oct 2025, 08:00 GMT+4
+      // GMT+4 -> UTC = 2025-10-26 04:00:00 UTC
+      const TARGET_TS = Date.UTC(2025, 9, 26, 4, 0, 0); // monthIndex: 0 = Jan, 9 = Oct
+
       const KEY = 'genz_launch_ts';
-      const stored = localStorage.getItem(KEY);
-      let target;
-      if (stored){
-        const ts = parseInt(stored, 10);
-        if (!isNaN(ts) && ts > Date.now()) {
-          target = ts;
-        } else {
-          target = Date.now() + 30 * 24 * 60 * 60 * 1000;
-          localStorage.setItem(KEY, String(target));
-        }
-      } else {
-        target = Date.now() + 30 * 24 * 60 * 60 * 1000;
-        localStorage.setItem(KEY, String(target));
+      // Устанавливаем в localStorage одно и то же значение для всех и чтобы не перезаписывалось
+      try {
+        localStorage.setItem(KEY, String(TARGET_TS));
+      } catch (e) {
+        // если localStorage недоступен — продолжаем без него
       }
-      countdown.innerHTML = `\n        <div class="launch-timer" aria-live="polite">\n          <div class="lt-label">Launch countdown</div>\n          <div class="lt-wrap" role="timer" aria-atomic="true">\n            <div class="lt-item"><div class="lt-num" id="lt-days">30</div><div class="lt-unit">Days</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-hours">00</div><div class="lt-unit">Hours</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-mins">00</div><div class="lt-unit">Minutes</div></div>\n            <div class="lt-item"><div class="lt-num" id="lt-secs">00</div><div class="lt-unit">Seconds</div></div>\n          </div>\n        </div>\n      `;
+
+      countdown.innerHTML = `
+        <div class="launch-timer" aria-live="polite">
+          <div class="lt-label">Launch countdown</div>
+          <div class="lt-wrap" role="timer" aria-atomic="true">
+            <div class="lt-item"><div class="lt-num" id="lt-days">00</div><div class="lt-unit">Days</div></div>
+            <div class="lt-item"><div class="lt-num" id="lt-hours">00</div><div class="lt-unit">Hours</div></div>
+            <div class="lt-item"><div class="lt-num" id="lt-mins">00</div><div class="lt-unit">Minutes</div></div>
+            <div class="lt-item"><div class="lt-num" id="lt-secs">00</div><div class="lt-unit">Seconds</div></div>
+          </div>
+        </div>
+      `;
+
       function pad(n){ return String(n).padStart(2,'0'); }
+
       function update(){
         const now = Date.now();
-        let diff = Math.max(0, target - now);
+        let diff = Math.max(0, TARGET_TS - now);
         if (diff <= 0){
           document.getElementById('lt-days').textContent = '00';
           document.getElementById('lt-hours').textContent = '00';
@@ -717,11 +727,13 @@
         const mins = Math.floor(diff / 60000);
         diff -= mins * 60000;
         const secs = Math.floor(diff / 1000);
+
         document.getElementById('lt-days').textContent = pad(days);
         document.getElementById('lt-hours').textContent = pad(hours);
         document.getElementById('lt-mins').textContent = pad(mins);
         document.getElementById('lt-secs').textContent = pad(secs);
       }
+
       update();
       const intervalId = setInterval(update, 1000);
     })();
