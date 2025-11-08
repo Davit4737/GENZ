@@ -1,744 +1,687 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GENZ — Official</title>
-  <meta name="description" content="GENZ — meme coin. Official landing (HTML/CSS/JS)." />
-  <meta name="robots" content="noindex,nofollow" />
-  <link rel="icon" href="./img/IMG_0605.PNG" />
-  <style>
-    :root{
-      --bg1:#0f1724;
-      --muted-weak:rgba(255,255,255,0.60);
-      --card-bg: rgba(6,10,20,0.62);
-      --yellow-1:#ffd60a;
-      --yellow-2:#ffb300;
-      --maxw:1100px;
-      --accent:#7dd3fc;
-      --panel-bg:#071025;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#fff;background-color:var(--bg1);position:relative;overflow-x:hidden}
-    .bg{position:fixed;inset:0;background-image:url('./img/IMG_0606.PNG');background-size:cover;background-position:center;z-index:0;filter:saturate(0.9) contrast(0.9);transform:translateZ(0)}
-    .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.75),rgba(2,8,25,0.85));z-index:1;pointer-events:none}
-    #bgCanvas { position: fixed; inset:0; width:100%; height:100%; display:block; z-index:1; pointer-events:none; }
-    .wrap{max-width:var(--maxw);margin:28px auto;padding:24px;position:relative;z-index:2}
-    header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
-    .brand{display:flex;gap:14px;align-items:center}
-    .logo{width:110px;height:110px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:2px solid rgba(255,255,255,0.06);flex-shrink:0}
-    .logo img{width:110%;height:110%;object-fit:cover;display:block;transform:scale(1.02)}
-    .brand .title{font-weight:800;font-size:16px}
-    nav{display:flex;gap:14px;align-items:center}
-    nav a{color:var(--muted-weak);text-decoration:none;font-size:14px;padding:8px 10px;border-radius:10px;transition:all .18s}
-    .btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--yellow-1),var(--yellow-2));color:#0b1220;font-weight:800;padding:10px 18px;border-radius:14px;border:0;cursor:pointer;position:relative;z-index:1000}
-    .grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:6px}
-    @media(min-width:960px){.grid{grid-template-columns:1fr 420px}}
-    .card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);backdrop-filter:blur(6px)}
-    h1{margin:0;font-size:34px}
-    p.lead{color:var(--muted-weak);margin-top:8px}
-    .progress{margin-top:14px}
-    .bar{height:12px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden;border:1px solid rgba(0,0,0,0.35)}
-    .bar-inner{height:100%;width:15%;background:linear-gradient(90deg,var(--yellow-1),var(--yellow-2));transition:width .9s}
-    .bar-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted-weak);margin-top:8px}
-    .countdown{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;color:var(--muted-weak)}
-    td,th{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
-    footer{color:var(--muted-weak);font-size:13px;margin-top:18px;text-align:center}
-    .input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.25);color:#fff;flex:1}
-    @media(max-width:600px){h1{font-size:22px}.logo{width:86px;height:86px}.logo img{width:100%;height:100%;transform:none}}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Edgewonk — Visual Mock (без бекенда)</title>
 
-    /* modal */
-    .genz-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:20000}
-    .genz-modal{width:520px;max-width:95%;background:var(--panel-bg);border-radius:12px;padding:18px;color:#fff;position:relative;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
-    .genz-close{position:absolute;right:12px;top:8px;cursor:pointer;color:#ffd60a;font-weight:700}
-    .genz-input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;margin-top:8px}
-    .genz-btn{padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#ffd60a,#ffb300);border:0;cursor:pointer;font-weight:700}
-    .genz-secondary{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#fff;margin-left:8px}
-    .genz-small{font-size:13px;color:rgba(255,255,255,0.75);margin-top:8px}
-    .info-line{color:var(--muted-weak);margin-top:10px}
-    .address-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}
-    .address-label{font-weight:700;font-size:14px}
-    .address-code{font-family:monospace;font-size:13px;color:var(--muted-weak);overflow-wrap:anywhere}
-    .copy-btn{padding:8px 10px;border-radius:8px;background:linear-gradient(135deg,#7dd3fc,#4fd1c5);border:0;cursor:pointer;font-weight:700;color:#02121a}
-    .buy-warning{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(90deg, rgba(255,214,107,0.04), rgba(255,179,0,0.02));color:var(--yellow-1);padding:8px 10px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid rgba(255,214,107,0.12);width:100%}
-    .buy-warning strong{font-weight:900;color:transparent;background:linear-gradient(90deg,#ffd60a,#ffb300);-webkit-background-clip:text;background-clip:text}
-    .currency-toggle{display:flex;gap:8px;margin-top:8px}
-    .currency-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6;cursor:pointer}
-    .currency-toggle button.active{background:#07263a;color:#fff;border-color:rgba(125,211,252,0.28);box-shadow:0 4px 14px rgba(7,38,58,0.6)}
-    nav#mainNav {display:flex;gap:12px;align-items:center;max-width: 100%;overflow-x: auto;-webkit-overflow-scrolling: touch;padding: 6px 0;flex-wrap: nowrap}
-    nav#mainNav a { white-space: nowrap; color: #e6eef6; text-decoration: none; padding:8px 10px; border-radius:10px; transition: all .12s; }
-    nav#mainNav a:hover, nav#mainNav a:active { color:#fff; background: rgba(255,255,255,0.03); }
-    nav#mainNav a.btn { color: #0b1220; }
-    @media (max-width: 900px) {
-      nav#mainNav a { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
-      nav#mainNav { justify-content: flex-end; }
-      #mobileFallbackBuy { display: inline-flex !important; align-items:center; gap:8px; }
-    }
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    .socials { display:flex; gap:8px; align-items:center; margin-left:8px; }
-    .socials a { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; transition:all .12s; }
-    .socials a:hover { transform:translateY(-2px); background: rgba(255,255,255,0.04); }
-    .socials svg { width:20px; height:20px; display:block; fill: #e6eef6; }
-    .socials-side { display:flex; gap:8px; margin-top:10px; }
-    .socials-side a { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius:10px; background: rgba(255,255,255,0.02); text-decoration:none; color:var(--muted-weak); font-size:13px; transition:all .12s; }
-    .socials-side a:hover { background: rgba(255,255,255,0.03); color:#fff; }
-    .socials-side svg { width:18px; height:18px; fill: #e6eef6; }
-    #mobileFallbackBuy { display: none; position: fixed; right: 14px; bottom: 18px; z-index: 25000; background: linear-gradient(135deg,#ffd60a,#ffb300); color:#071025; padding: 12px 14px; border-radius: 14px; font-weight:800; box-shadow: 0 8px 30px rgba(0,0,0,0.45); border: none; }
+<style>
+:root{
+  --bg:#0b1220; --panel:#0e1622; --muted:#93a1ad; --accent:#4fd1c5;
+  --accent-2:#7b61ff; --danger:#ff6b6b; --glass: rgba(255,255,255,0.03);
+  --card-radius:10px; --pad:14px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg,#06101a 0%, #081424 100%); color:#e6eef3; -webkit-font-smoothing:antialiased;
+  padding:18px;
+}
 
-    .wp-panel { position:fixed; inset:0; z-index:30000; display:none; background:linear-gradient(180deg, rgba(2,6,23,0.95), rgba(2,6,23,0.98)); }
-    .wp-inner { 
-      max-width:1200px; 
-      margin:48px auto; 
-      background: linear-gradient(180deg, rgba(6,10,20,0.92), rgba(6,10,20,0.6)), url('./img/41bef794-cc43-4dc0-a9cf-6504b5b0db48-wm.png'); 
-      background-size: cover; 
-      background-position: center; 
-      border-radius:12px; 
-      display:block; 
-      padding:28px; 
-      height:calc(100% - 96px); 
-      overflow:auto; 
-      box-shadow:0 30px 80px rgba(0,0,0,0.8); 
-      color: #fff;
-    }
-    .wp-content { color:rgba(255,255,255,0.95); font-size:15px; line-height:1.6; max-width:1000px; margin:0 auto; background: transparent; }
-    .wp-title { font-size:26px; font-weight:800; margin-bottom:8px; color:#fff; text-align:center; }
-    .wp-section { margin-bottom:18px; }
-    .wp-section h4 { margin:0 0 8px 0; font-size:18px; color:var(--yellow-1); }
-    .wp-close { position:absolute; right:34px; top:28px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:#ffd60a; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:700; }
+/* Layout */
+.app{
+  display:grid; grid-template-columns:260px 1fr 360px; gap:16px;
+  align-items:start;
+}
 
-    @media (max-width: 900px) {
-      .wp-inner { margin:24px; padding:18px; height:calc(100% - 56px); }
-      .wp-title { font-size:20px; }
-    }
+/* Sidebar */
+.sidebar{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  border-radius:var(--card-radius); padding:12px; height:calc(100vh - 36px); overflow:auto;
+  box-shadow: 0 8px 30px rgba(1,6,18,0.6);
+}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.logo{
+  width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:#012;letter-spacing:0.6px;
+}
+.brand h2{margin:0;font-size:16px}
+.nav{margin-top:8px}
+.nav button{
+  display:flex;gap:10px;align-items:center;width:100%;border:0;background:transparent;color:var(--muted);
+  padding:10px;border-radius:8px;text-align:left;cursor:pointer;font-size:14px;
+}
+.nav button.active{background:linear-gradient(90deg, rgba(79,209,197,0.06), rgba(123,97,255,0.03));color:var(--accent)}
+.nav button:hover{color:#fff}
 
-    /* timer styles */
-    .launch-timer { width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:8px; }
-    .lt-label { font-size:13px; color:var(--muted-weak); font-weight:700; letter-spacing:0.6px; text-transform:uppercase; }
-    .lt-wrap { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
-    .lt-item { display:flex; flex-direction:column; align-items:center; min-width:68px; padding:10px 12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008)); border:1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.5); }
-    .lt-num { font-size:26px; font-weight:900; line-height:1; background: linear-gradient(90deg, #ffd60a, #7dd3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .lt-unit { font-size:12px; color:var(--muted-weak); margin-top:6px; text-transform:uppercase; letter-spacing:0.6px; }
-    @media(max-width:600px){ .lt-num { font-size:20px; } .buy-warning { font-size:12px; padding:6px 8px; } }
+/* Center area */
+.panel{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  border-radius:var(--card-radius); padding:14px; min-height:200px; box-shadow: 0 8px 30px rgba(1,6,18,0.6);
+}
+.header{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;
+}
+.header .title{font-size:18px;font-weight:600}
+.header .actions{display:flex;gap:8px;align-items:center}
 
-  </style>
+/* dashboard grid */
+.grid{
+  display:grid; grid-template-columns: repeat(3,1fr); gap:12px;
+}
+.card{
+  background:var(--panel); padding:12px;border-radius:10px; min-height:80px;
+}
+.kpi{display:flex;flex-direction:column;gap:6px}
+.kpi .big{font-size:20px;font-weight:700}
+.kpi .muted{color:var(--muted);font-size:12px}
+
+/* Tabs content */
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+.tab.active{background:linear-gradient(90deg,#0f2b26, #12203a);border:1px solid rgba(79,209,197,0.12);color:var(--accent)}
+
+/* Table */
+.table{
+  width:100%; border-collapse:collapse; font-size:13px;
+}
+.table thead th{font-size:12px;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px dashed rgba(255,255,255,0.03)}
+.table tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02)}
+.table .tag{padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:12px}
+
+/* Right column */
+.right{
+  display:flex;flex-direction:column;gap:12px;height:calc(100vh - 36px);overflow:auto;
+}
+
+/* Mini components */
+.search{display:flex;gap:8px;align-items:center}
+.input{background:var(--glass);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.03);color:inherit}
+
+/* Modals / tooltips */
+.modal-backdrop{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(1,4,10,0.6);display:none;align-items:center;justify-content:center}
+.modal{background:#07131a;padding:18px;border-radius:12px;width:820px;max-width:95%}
+.modal h3{margin:0 0 12px 0}
+.button{padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#022;cursor:pointer}
+
+/* small helpers */
+.row{display:flex;gap:10px;align-items:center}
+.col{display:flex;flex-direction:column;gap:6px}
+.small{font-size:13px;color:var(--muted)}
+.footer{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+
+/* responsive */
+@media(max-width:1100px){
+  .app{grid-template-columns:220px 1fr}
+  .right{display:none}
+}
+@media(max-width:700px){
+  body{padding:10px}
+  .app{grid-template-columns:1fr}
+  .sidebar{height:auto}
+}
+</style>
 </head>
 <body>
-  <canvas id="bgCanvas" aria-hidden="true"></canvas>
-  <div class="bg" aria-hidden="true"></div>
 
-  <div class="wrap">
-    <header>
-      <div class="brand" role="banner">
-        <div class="logo" aria-label="GENZ logo">
-          <img src="./img/IMG_0605.PNG" alt="GENZ logo">
-        </div>
-        <div>
-          <div class="title">GENZ — Official</div>
-          <div class="sub">Nickname: <strong>GENZ</strong></div>
-        </div>
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+  <div style="font-weight:700;color:var(--muted)">Visual mock</div>
+  <div style="color:var(--muted)">— фулл интерфейс (без бекенда)</div>
+</div>
+
+<div class="app">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">EW</div>
+      <div>
+        <h2 style="margin:0">Edgewonk UI — Mock</h2>
+        <div class="small">Визуальный макет — без бекенда</div>
       </div>
+    </div>
 
-      <nav role="navigation" aria-label="Top navigation" id="mainNav">
-        <a href="#roadmap" class="nav-link">Roadmap</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-        <a class="btn nav-link" href="#buy" id="navBuy">Support the Team</a>
-      </nav>
+    <nav class="nav" id="leftNav">
+      <button class="active" data-view="dashboard">Dashboard</button>
+      <button data-view="journal">Journal</button>
+      <button data-view="analytics">Analytics</button>
+      <button data-view="heatmap">Heatmap</button>
+      <button data-view="planner">Trade Planner</button>
+      <button data-view="reports">Reports</button>
+      <button data-view="settings">Settings</button>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:10px 0">
+      <button data-view="account">Account (Login)</button>
+      <button data-view="import">Import (API)</button>
+    </nav>
 
-      <div class="socials" aria-hidden="false">
-        <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ on X (Twitter)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.5 0-.8-.1.5 1.7 2 3 3.8 3-1.4 1.1-3.1 1.7-5 1.7-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
-        </a>
-        <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ on Telegram">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
-        </a>
-      </div>
-    </header>
-
-    <main class="grid">
-      <section>
-        <div class="card">
-          <h1>GENZ — next-generation meme coin</h1>
-          <p class="lead">GENZ — memecoin for the new generation. This is the official project page. Verify the contract address before participating; never share private keys.</p>
-
-          <div class="progress">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div class="muted small">Stage</div>
-              <div class="muted small">Token price</div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <div><strong id="stageName">Listing soon</strong></div>
-              <div><strong id="tokenPrice">To be announced</strong></div>
-            </div>
-            <div class="bar" aria-hidden="true" style="margin-top:10px">
-              <div class="bar-inner" id="barInner" style="width:8%"></div>
-            </div>
-            <div class="bar-row"><span id="pct">Stage progress</span><span class="muted small">of stage target</span></div>
-          </div>
-
-          <div style="margin-top:18px" id="buy">
-            <div class="muted small">Launch status</div>
-            <!-- countdown filled by JS (30 days persistent timer) -->
-            <div class="countdown" id="countdown"><!-- JS fills --></div>
-
-            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px">
-              <div class="muted small">Current stage: <strong id="stageLabel">Listing soon</strong></div>
-              <div style="display:flex;gap:10px;align-items:center">
-                <div style="padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);font-weight:700">Price: <span id="buyPrice">To be announced</span></div>
-                <button class="btn" id="simpleBuy">Support the Team</button>
-              </div>
-            </div>
-
-            <div id="walletNotice" style="margin-top:8px"></div>
-          </div>
+    <div style="margin-top:14px">
+      <div class="small" style="margin-bottom:8px">Dummy data</div>
+      <div style="display:grid;gap:8px">
+        <div style="background:linear-gradient(90deg, rgba(79,209,197,0.06), rgba(123,97,255,0.03));padding:10px;border-radius:8px">
+          <div style="font-size:14px;font-weight:700">Equity</div>
+          <div style="font-size:18px">+$12,480</div>
+          <div class="small">Period: 3 months</div>
         </div>
-
-        <div class="card" style="margin-top:16px" id="roadmap">
-          <h3>Roadmap</h3>
-          <ol class="muted small">
-            <li>Initial launch & listing</li>
-            <li> Pumpfun listing, liquidity add</li>
-            <li>Marketing push, community events, merch</li>
-          </ol>
+        <div style="background:var(--panel);padding:10px;border-radius:8px">
+          <div class="small">Win Rate</div>
+          <div style="font-weight:700">62%</div>
         </div>
-
-        <div class="card" style="margin-top:16px" id="whitepaper">
-          <h3>White Paper</h3>
-          <p class="muted small">A brief overview and project goals are in the white paper. Below is an excerpt and a button to download the full document.</p>
-          <div style="margin-top:8px" class="muted small">
-          </div>
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <button id="downloadWhitepaper" class="btn">Download White Paper</button>
-            <button id="openWhitepaperFull" class="btn" style="background:linear-gradient(135deg,#7dd3fc,#4fd1c5);color:#02121a">Open White Paper (Fullscreen)</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:16px" id="faq">
-          <h3>FAQ</h3>
-          <details>
-            <summary>How do I verify the contract?</summary>
-            <div class="muted small" style="margin-top:8px">Copy the contract address and check its code and transactions on Solscan or the appropriate explorer. The official verified address will be published prior to any listing.</div>
-          </details>
-          <details style="margin-top:8px">
-            <summary>How do I participate?</summary>
-            <div class="muted small" style="margin-top:8px">Follow our X and Telegram to participate.</div>
-          </details>
-        </div>
-      </section>
-
-      <aside>
-        <div class="card">
-          <h3>Subscribe</h3>
-          <p class="muted small">Subscribe for contract updates and official announcements.</p>
-          <form id="subscribeForm" class="subscribe" onsubmit="return false">
-            <input id="email" class="input" placeholder="Email" />
-            <button id="subBtn" class="btn">Subscribe</button>
-          </form>
-          <div id="subMsg" class="muted small" style="margin-top:8px"></div>
-
-          <div style="margin-top:12px">
-            <div class="socials-side" aria-hidden="false">
-              <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ on X">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
-                <span style="margin-left:8px">X</span>
-              </a>
-              <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ on Telegram">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
-                <span style="margin-left:8px">Telegram</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h4>Disclaimer</h4>
-          <p class="muted small">GENZ official page. Not financial advice.</p>
-        </div>
-      </aside>
-    </main>
-
-    <footer>
-      <div style="display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;">
-        <div class="muted small">© 2025 GENZ — all rights reserved.</div>
-        <div style="opacity:.8">|</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <a href="https://x.com/1genztoken?s=21" target="_blank" rel="noopener noreferrer" aria-label="GENZ X" style="text-decoration:none;color:inherit;">
-            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.9 5.2c-.6.3-1.2.5-1.8.6.7-.4 1.2-1 1.5-1.8-.6.4-1.3.7-2.1.9C18.8 3.9 17.8 3.5 16.7 3.5c-1.9 0-3.4 1.6-3.4 3.5 0 .3 0 .7.1 1C9.9 7.9 7.1 6.4 5.1 4c-.4.6-.6 1.3-.6 2.1 0 1.2.6 2.3 1.6 3-.5 0-1-.2-1.4-.4 0 1.9 1.3 3.5 3 3.9-.4.1-.8.1-1.2.1-.3 0-.6 0-.9-.1 1.8 1.1 3.9 1.7 6.2 1.7 7.4 0 11.4-6.4 11.4-11.9v-.5c.8-.6 1.5-1.3 2-2.1"/></svg>
-          </a>
-          <a href="https://t.me/+cCBIPuvYv7UwNjNi" target="_blank" rel="noopener noreferrer" aria-label="GENZ Telegram" style="text-decoration:none;color:inherit;">
-            <svg style="vertical-align:middle" viewBox="0 0 24 24" width="18" height="18"><path d="M21.6 3.1c-.2-.3-.5-.4-.9-.3L2.6 9.1c-.5.1-.6.6-.2.9l4 3.1 1.7 5.6c.2.6.9.8 1.4.4l2.6-2 4.9 3.6c.5.4 1.1.1 1.2-.6l3.2-17.8c.1-.5-.1-1-.7-1.2zM9.6 14.3L6.8 12.5l8.3-3.3-5.5 5.1z"/></svg>
-          </a>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <button id="mobileFallbackBuy" type="button" aria-hidden="false">Support the Team</button>
-
-  <div id="whitepaperPanel" class="wp-panel" role="dialog" aria-modal="true" tabindex="-1">
-    <button id="wpClose" class="wp-close">CLOSE</button>
-    <div class="wp-inner">
-      <div class="wp-content" id="wpContent">
-        <div class="wp-title">GENZ — White Paper</div>
-
-        <div class="wp-section">
-          <h4>Vision</h4>
-          <p>GENZ is built as a community-oriented memecoin with transparent tokenomics and a focus on long-term community value. The goal is to give users fair access, stable liquidity and opportunities for community rewards and merch.</p>
-        </div>
-
-
-        <div class="wp-section">
-          <h4>Roadmap</h4>
-          <ol>
-            <li>Prepare contracts and internal checks</li>
-            <li>Listings on pumpfun and liquidity provisioning</li>
-            <li>Marketing, community events and merch launch</li>
-          </ol>
-        </div>
-
-        <div class="wp-section">
-          <h4>History</h4>
-          <p>He was a quiet kid, always staying in the shadows. Nobody really understood him—neither at school nor at home. Sometimes he got teased, people laughed at him, and he often felt a little lost in this big, noisy world. But in that silence, a spark was growing.</p>
-          <p>He turned his frustration and his unusual view of the world into creativity. One day, he took everything the world didn’t get about him and turned it into something bigger—a meme coin that became the voice of the misunderstood, those who stay behind the scenes, the digital rebels. That’s how GenZCoin was born: from a quiet kid’s struggle into a movement for an entire generation.</p>
-        </div>
-
-        <div class="wp-section">
-          <h4>Security & Verification</h4>
-          <p>Contracts will be published and verified on explorers (Solscan etc.) before any listing. Never share private keys. An audit is recommended before mass listing.</p>
-        </div>
-
-        <div class="wp-section">
-          <h4>Team & Vesting</h4>
-          <p>The team's allocation is locked and distributed according to a pre-announced vesting schedule.</p>
-        </div>
-
-        <div class="wp-section">
-          <h4>Legal & Risk</h4>
-          <p>GENZ does not provide financial guarantees. Participation in any token activity carries risks. Investors should perform their own due diligence and consider possible restrictions in their jurisdictions.</p>
+        <div style="background:var(--panel);padding:10px;border-radius:8px">
+          <div class="small">Avg P/L</div>
+          <div style="font-weight:700">+$85</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Three.js (for background animation) -->
-  <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
+    <div class="footer">
+      Макет: интерфейсный клон | Серия: 1.0
+    </div>
+  </aside>
 
-  <!-- 3D coins script (unchanged) -->
-  <script>
-  (function(){
-    const canvas = document.getElementById('bgCanvas');
-    if (!canvas) return;
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
-    renderer.setClearColor(0x000000, 0);
-    renderer.shadowMap.enabled = false;
+  <!-- CENTER -->
+  <main>
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 90);
+    <!-- Dashboard panel -->
+    <section class="panel" id="view-dashboard">
+      <div class="header">
+        <div>
+          <div class="title">Dashboard</div>
+          <div class="small">Обзор счёта, equity, быстрые KPI</div>
+        </div>
+        <div class="actions">
+          <button class="tab active" onclick="openModal('addTrade')">+ Add Trade (disabled)</button>
+          <button class="tab" onclick="notifyDisabled()">Sync (disabled)</button>
+          <div style="width:12px"></div>
+          <div class="small">Mock UI</div>
+        </div>
+      </div>
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const pLight = new THREE.PointLight(0xfff1c8, 0.9, 400);
-    pLight.position.set(40, 30, 60);
-    scene.add(pLight);
+      <div class="grid" style="margin-bottom:12px">
+        <div class="card kpi">
+          <div class="small">Баланс</div>
+          <div class="big">+$12480</div>
+          <div class="muted">Начальный капитал: $8,520</div>
+        </div>
 
-    function makeCoinTexture(){
-      const size = 256;
-      const c = document.createElement('canvas');
-      c.width = c.height = size;
-      const ctx = c.getContext('2d');
+        <div class="card kpi">
+          <div class="small">Win Rate</div>
+          <div class="big">62%</div>
+          <div class="muted">28 выигрышей / 45 сделок</div>
+        </div>
 
-      ctx.clearRect(0,0,size,size);
-      const cx = size/2, cy = size/2, r = size*0.42;
-      const rg = ctx.createRadialGradient(cx - size*0.06, cy - size*0.06, r*0.1, cx, cy, r);
-      rg.addColorStop(0, '#fff8df');
-      rg.addColorStop(0.45, '#ffd46b');
-      rg.addColorStop(1, '#c78a18');
+        <div class="card kpi">
+          <div class="small">Avg P/L</div>
+          <div class="big">+$85</div>
+          <div class="muted">Средняя прибыль/сделка</div>
+        </div>
+      </div>
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI*2);
-      ctx.closePath();
-      ctx.fillStyle = rg;
-      ctx.fill();
+      <div style="display:flex;gap:12px">
+        <div style="flex:2" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:700">Equity Curve</div>
+            <div class="small">Period: 90d</div>
+          </div>
+          <canvas id="equityMain" height="160"></canvas>
+        </div>
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, r*0.88, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(0,0,0,0.06)';
-      ctx.fill();
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-weight:700">Daily P/L</div><div class="small">Last 30 days</div>
+            </div>
+            <canvas id="dailyBar" height="120"></canvas>
+          </div>
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, r + 6, 0, Math.PI*2);
-      ctx.lineWidth = size*0.06;
-      ctx.strokeStyle = 'rgba(255,230,120,0.96)';
-      ctx.stroke();
-
-      ctx.font = 'bold 110px "Arial"';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#3a2300';
-      ctx.fillText('G', cx, cy + 2);
-
-      const shine = ctx.createLinearGradient(0, 0, size, 0);
-      shine.addColorStop(0, 'rgba(255,255,255,0.18)');
-      shine.addColorStop(0.45, 'rgba(255,255,255,0.02)');
-      shine.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = shine;
-      ctx.beginPath();
-      ctx.ellipse(cx - size*0.08, cy - size*0.14, r*0.9, r*0.35, -0.35, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-      ctx.lineWidth = 1.2;
-      for (let i=0;i<8;i++){
-        const a = (i/8) * Math.PI*2;
-        const x1 = cx + Math.cos(a) * (r + 4);
-        const y1 = cy + Math.sin(a) * (r + 4);
-        const x2 = cx + Math.cos(a) * (r + 10);
-        const y2 = cy + Math.sin(a) * (r + 10);
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
-      }
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.needsUpdate = true;
-      tex.minFilter = THREE.LinearMipMapLinearFilter;
-      tex.generateMipmaps = true;
-      return tex;
-    }
-
-    const coinTexture = makeCoinTexture();
-
-    const coinMaterial = new THREE.MeshStandardMaterial({
-      map: coinTexture,
-      metalness: 0.8,
-      roughness: 0.25,
-      transparent: true,
-      side: THREE.DoubleSide,
-      alphaTest: 0.08
-    });
-
-    const COIN_RADIUS = 3.0;
-    const coinGeo = new THREE.CircleGeometry(COIN_RADIUS, 64);
-
-    const COUNT = 60;
-    const inst = new THREE.InstancedMesh(coinGeo, coinMaterial, COUNT);
-    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(inst);
-
-    const states = [];
-    for (let i=0;i<COUNT;i++){
-      const pos = new THREE.Vector3(
-        (Math.random() - 0.5) * 160,
-        (Math.random() - 0.5) * 80,
-        (Math.random() - 0.5) * 160
-      );
-      const tilt = (Math.random() * 0.5) - 0.25;
-      const rot = new THREE.Euler(
-        tilt,
-        Math.random() * Math.PI * 2,
-        (Math.random() * 0.6) - 0.3
-      );
-      const scale = 0.6 + Math.random() * 1.2;
-      const speed = 0.2 + Math.random() * 0.9;
-      const bobPhase = Math.random() * Math.PI * 2;
-      states.push({ pos, rot, scale, speed, bobPhase });
-      const mat = new THREE.Matrix4();
-      mat.compose(pos, new THREE.Quaternion().setFromEuler(rot), new THREE.Vector3(scale, scale, scale));
-      inst.setMatrixAt(i, mat);
-    }
-    inst.instanceMatrix.needsUpdate = true;
-
-    function onResize(){
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-    }
-    onResize();
-    window.addEventListener('resize', onResize, {passive:true});
-
-    let mouseX = 0, mouseY = 0;
-    function onMove(e){
-      const x = (e.clientX / window.innerWidth) - 0.5;
-      const y = (e.clientY / window.innerHeight) - 0.5;
-      mouseX = x * 18;
-      mouseY = -y * 8;
-    }
-    window.addEventListener('mousemove', onMove, {passive:true});
-    window.addEventListener('touchmove', (ev)=>{
-      const t = ev.touches && ev.touches[0];
-      if (t) onMove(t);
-    }, {passive:true});
-
-    let last = performance.now();
-    function animate(now){
-      const dt = (now - last) * 0.001;
-      last = now;
-
-      camera.position.x += (mouseX - camera.position.x) * 0.05;
-      camera.position.y += (mouseY - camera.position.y) * 0.05;
-      camera.lookAt(0,0,0);
-
-      const tmpMat = new THREE.Matrix4();
-      const q = new THREE.Quaternion();
-      const posVec = new THREE.Vector3();
-      for (let i=0;i<COUNT;i++){
-        const s = states[i];
-        s.rot.x += 0.12 * dt * s.speed * 0.5;
-        s.rot.y += 0.18 * dt * s.speed * 0.5;
-        s.rot.z += 0.06 * dt * s.speed * 0.5;
-        s.bobPhase += 1.0 * dt * s.speed * 0.6;
-        const bob = Math.sin(s.bobPhase) * (0.5 + s.speed * 0.45);
-        posVec.copy(s.pos);
-        posVec.y += bob;
-        posVec.z += Math.sin(now * 0.0008 + i) * 0.02;
-        q.setFromEuler(s.rot);
-        tmpMat.compose(posVec, q, new THREE.Vector3(s.scale, s.scale, s.scale));
-        inst.setMatrixAt(i, tmpMat);
-      }
-      inst.instanceMatrix.needsUpdate = true;
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
-
-    window.addEventListener('unload', ()=> {
-      try{ renderer.dispose(); }catch(e){}
-    });
-
-  })();
-  </script>
-
-  <script>
-  (function(){
-
-    function $(id){ return document.getElementById(id); }
-    function addTap(el, handler){
-      if(!el) return;
-      if(el.__tap_installed) return;
-      el.__tap_installed = true;
-      const wrapped = function(e){
-        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
-        handler(e);
-      };
-      try {
-        el.addEventListener('touchend', wrapped, {passive:false});
-      } catch(err) {
-        el.addEventListener('touchend', wrapped, false);
-      }
-      el.addEventListener('pointerup', wrapped, {passive:false});
-      el.addEventListener('click', wrapped, {passive:false});
-      el.style.zIndex = 20000;
-      el.style.pointerEvents = 'auto';
-    }
-
-    // --- Simple Support modal (from original) ---
-    const BTC_ADDRESS = 'bc1qghuypgsszh2el37pgpeqz64umvfhj507gw8ac3';
-    const USDT_POLYGON_ADDRESS = '0xfEa834d983eA0C2dE63a73288855881334F50A54';
-    const SOL_ADDRESS = '22EgzkhQcDbxSgXKqqP6oqfzzHtsHSsSGuWzuVj4qAbE';
-
-    window.openBuyModal = function(){
-      if (document.getElementById('__genz_modal')) return;
-      const overlay = document.createElement('div'); overlay.id='__genz_modal'; overlay.className='genz-modal-overlay';
-      const box = document.createElement('div'); box.className='genz-modal';
-      overlay.appendChild(box);
-
-      const close = document.createElement('div'); close.className='genz-close'; close.textContent='✕';
-      addTap(close, ()=> overlay.remove());
-      box.appendChild(close);
-
-      const title = document.createElement('h3'); title.textContent = 'Support GENZ';
-      box.appendChild(title);
-
-      const desc = document.createElement('div'); desc.className='genz-small';
-      desc.textContent = 'Copy the official recipient address for the chain you will send from. Do not share private keys.';
-      box.appendChild(desc);
-
-      const warn = document.createElement('div'); warn.className='buy-warning';
-      warn.innerHTML = 'Send with Memo: <strong>GENZ</strong>';
-      warn.style.marginTop = '10px';
-      box.appendChild(warn);
-
-      const status = document.createElement('div'); status.className='genz-small'; status.style.fontWeight='700';
-      status.textContent = 'GENZ: 0 (≈ $0.00)';
-      status.style.marginTop = '12px';
-      box.appendChild(status);
-
-      function makeRow(label, code, chainTag){
-        const row = document.createElement('div'); row.className = 'address-row';
-        const left = document.createElement('div');
-        const lab = document.createElement('div'); lab.className='address-label'; lab.textContent = label + ' (' + chainTag + ')';
-        const codeEl = document.createElement('div'); codeEl.className='address-code'; codeEl.textContent = code;
-        left.appendChild(lab); left.appendChild(codeEl);
-        const copyBtn = document.createElement('button'); copyBtn.className='copy-btn'; copyBtn.textContent = 'Copy';
-        copyBtn.addEventListener('click', async ()=>{
-          try {
-            await navigator.clipboard.writeText(code);
-            copyBtn.textContent = 'Copied';
-            setTimeout(()=> copyBtn.textContent = 'Copy', 1800);
-          } catch(e){
-            const ta = document.createElement('textarea'); ta.value = code; document.body.appendChild(ta); ta.select();
-            try { document.execCommand('copy'); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.textContent = 'Copy', 1800); } catch(err){ alert('Copy failed — copy manually: ' + code); }
-            document.body.removeChild(ta);
-          }
-        });
-        row.appendChild(left);
-        row.appendChild(copyBtn);
-        return row;
-      }
-
-      box.appendChild(makeRow('Bitcoin address', BTC_ADDRESS, 'BTC'));
-      box.appendChild(makeRow('USDT (Polygon) address', USDT_POLYGON_ADDRESS, 'Polygon (MATIC)'));
-      box.appendChild(makeRow('Solana address', SOL_ADDRESS, 'SOL'));
-
-      overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
-
-      document.body.appendChild(overlay);
-      return overlay;
-    };
-   
-
-    function attachHandlers(){
-      const simple = $('simpleBuy');
-      if (simple) addTap(simple, ()=> openBuyModal());
-      const navBuy = $('navBuy');
-      if (navBuy) addTap(navBuy, ()=> openBuyModal());
-      const fallback = $('mobileFallbackBuy');
-      if (fallback) addTap(fallback, ()=> openBuyModal());
-    }
-    if (document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', attachHandlers);
-    } else attachHandlers();
-
-    (function ensureNavVisible(){
-      const nav = document.getElementById('mainNav');
-      if (nav){
-        nav.style.display = 'flex';
-        nav.style.visibility = 'visible';
-      }
-    })();
-
-    if (document.getElementById('subscribeForm')){
-      document.getElementById('subscribeForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        const email = (document.getElementById('email')||{}).value || '';
-        const msg = document.getElementById('subMsg');
-        if (!email.trim()){ if(msg) msg.textContent = 'Enter email.'; return; }
-        if(msg) msg.textContent = 'Subscription accepted (stub).';
-      });
-    }
-
-    const whiteText = [
-"GENZ — White Paper (excerpt)",
-"",
-"1. Vision",
-"GENZ aims to be a community-driven memecoin with a focus on transparency and long-term community value.",
-"",
-"2. Launch Plan (summary)",
-"- Prepare contracts and internal checks",
-"- Listings on pumpfun and liquidity provisioning",
-"- Marketing, community events and merch",
-"",
-"— End of excerpt —"
-].join("\n");
-
-    const dwBtn = $('downloadWhitepaper');
-    if (dwBtn){
-      dwBtn.addEventListener('click', function(){
-        const blob = new Blob([whiteText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'GENZ_WhitePaper.txt';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-    }
-
-    var openFullBtn = $('openWhitepaperFull');
-    var wpPanel = $('whitepaperPanel');
-    var wpClose = $('wpClose');
-    if (openFullBtn && wpPanel){
-      addTap(openFullBtn, function(){
-        wpPanel.style.display = 'block';
-        wpPanel.focus();
-        document.body.style.overflow = 'hidden';
-      });
-    }
-    if (wpClose && wpPanel){
-      addTap(wpClose, function(){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; });
-    }
-    if (wpPanel){
-      wpPanel.addEventListener('click', function(e){ if (e.target === wpPanel) { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
-      wpPanel.addEventListener('keydown', function(e){ if (e.key === 'Escape') { wpPanel.style.display = 'none'; document.body.style.overflow = ''; } });
-    }
-
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (wpPanel && wpPanel.style.display === 'block'){ wpPanel.style.display = 'none'; document.body.style.overflow = ''; } const gm = document.getElementById('__genz_modal'); if (gm) gm.remove(); } });
-
-    (function initLaunchTimer(){
-      const countdown = document.getElementById('countdown');
-      if (!countdown) return;
-
-      // Фиксированный момент запуска: 26 Oct 2025, 08:00 GMT+4
-      // GMT+4 -> UTC = 2025-10-26 04:00:00 UTC
-      const TARGET_TS = Date.UTC(2025, 9, 26, 4, 0, 0); // monthIndex: 0 = Jan, 9 = Oct
-
-      const KEY = 'genz_launch_ts';
-      // Устанавливаем в localStorage одно и то же значение для всех и чтобы не перезаписывалось
-      try {
-        localStorage.setItem(KEY, String(TARGET_TS));
-      } catch (e) {
-        // если localStorage недоступен — продолжаем без него
-      }
-
-      countdown.innerHTML = `
-        <div class="launch-timer" aria-live="polite">
-          <div class="lt-label">Launch countdown</div>
-          <div class="lt-wrap" role="timer" aria-atomic="true">
-            <div class="lt-item"><div class="lt-num" id="lt-days">00</div><div class="lt-unit">Days</div></div>
-            <div class="lt-item"><div class="lt-num" id="lt-hours">00</div><div class="lt-unit">Hours</div></div>
-            <div class="lt-item"><div class="lt-num" id="lt-mins">00</div><div class="lt-unit">Minutes</div></div>
-            <div class="lt-item"><div class="lt-num" id="lt-secs">00</div><div class="lt-unit">Seconds</div></div>
+          <div class="card">
+            <div style="font-weight:700;margin-bottom:8px">Top Symbols</div>
+            <div class="small">BTCUSDT +$5,200</div>
+            <div class="small">AAPL +$2,600</div>
+            <div class="small">EURUSD +$1,180</div>
           </div>
         </div>
-      `;
+      </div>
 
-      function pad(n){ return String(n).padStart(2,'0'); }
+    </section>
 
-      function update(){
-        const now = Date.now();
-        let diff = Math.max(0, TARGET_TS - now);
-        if (diff <= 0){
-          document.getElementById('lt-days').textContent = '00';
-          document.getElementById('lt-hours').textContent = '00';
-          document.getElementById('lt-mins').textContent = '00';
-          document.getElementById('lt-secs').textContent = '00';
-          const label = countdown.querySelector('.lt-label');
-          if (label) label.textContent = 'Launched!';
-          clearInterval(intervalId);
-          return;
-        }
-        const days = Math.floor(diff / 86400000);
-        diff -= days * 86400000;
-        const hours = Math.floor(diff / 3600000);
-        diff -= hours * 3600000;
-        const mins = Math.floor(diff / 60000);
-        diff -= mins * 60000;
-        const secs = Math.floor(diff / 1000);
+    <!-- Journal panel -->
+    <section class="panel" id="view-journal" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Journal</div>
+          <div class="small">Список сделок — визуальный макет</div>
+        </div>
+        <div class="actions">
+          <div class="search">
+            <input class="input" placeholder="Поиск по символу / заметке" oninput="notifyDisabled()" />
+            <button class="tab" onclick="notifyDisabled()">Filter</button>
+          </div>
+        </div>
+      </div>
 
-        document.getElementById('lt-days').textContent = pad(days);
-        document.getElementById('lt-hours').textContent = pad(hours);
-        document.getElementById('lt-mins').textContent = pad(mins);
-        document.getElementById('lt-secs').textContent = pad(secs);
-      }
+      <div style="margin-bottom:12px" class="tabs">
+        <div class="tab active">All</div>
+        <div class="tab" onclick="notifyDisabled()">Longs</div>
+        <div class="tab" onclick="notifyDisabled()">Shorts</div>
+        <div class="tab" onclick="notifyDisabled()">Tagged</div>
+      </div>
 
-      update();
-      const intervalId = setInterval(update, 1000);
-    })();
+      <div class="card" style="padding:6px;">
+        <table class="table">
+          <thead><tr>
+            <th>Дата</th><th>Символ</th><th>Тип</th><th>Entry</th><th>Exit</th><th>Size</th><th>P/L</th><th>%</th><th>Note</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="journalTable">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
 
-  })();
-  </script>
+      <div style="margin-top:12px;display:flex;gap:12px">
+        <div class="card" style="flex:1">
+          <div style="font-weight:700">Weekly summary</div>
+          <div class="small">Week 44 — P/L +$1,200 — 6 trades</div>
+          <div class="small">Week 43 — P/L -$320 — 4 trades</div>
+        </div>
+        <div class="card" style="flex:1">
+          <div style="font-weight:700">Notes / Journal</div>
+          <div class="small">Макет: здесь отображается текстовый журнал (disabled)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics panel -->
+    <section class="panel" id="view-analytics" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Analytics</div>
+          <div class="small">Metrics, distributions, performance</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Export PDF</button>
+          <button class="tab" onclick="notifyDisabled()">Advanced metrics</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <div style="flex:1" class="card">
+          <div style="font-weight:700;margin-bottom:8px">Distribution of returns</div>
+          <canvas id="distChart" height="140"></canvas>
+        </div>
+        <div style="flex:1" class="card">
+          <div style="font-weight:700;margin-bottom:8px">Trade length vs P/L</div>
+          <canvas id="scatterChart" height="140"></canvas>
+        </div>
+        <div style="width:280px" class="card">
+          <div style="font-weight:700;margin-bottom:8px">Key metrics</div>
+          <div class="small">Profit Factor: 1.48</div>
+          <div class="small">Max Drawdown: -8.2%</div>
+          <div class="small">Expectancy: +0.95</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Heatmap panel -->
+    <section class="panel" id="view-heatmap" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Heatmap</div>
+          <div class="small">Time-of-day / day-of-week performance</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Recalc (disabled)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:8px">Time Heatmap (mock)</div>
+        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">
+          <!-- dummy cells -->
+          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">MON<br><strong>+120</strong></div>
+          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">TUE<br><strong>-20</strong></div>
+          <div style="padding:14px;background:#07302a;border-radius:8px;text-align:center">WED<br><strong>+400</strong></div>
+          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">THU<br><strong>+60</strong></div>
+          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">FRI<br><strong>-80</strong></div>
+          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">SAT<br><strong>+20</strong></div>
+          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">SUN<br><strong>+10</strong></div>
+          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">ALL<br><strong>+520</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planner -->
+    <section class="panel" id="view-planner" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Trade Planner</div>
+          <div class="small">Plan trades / risk sizing (visual only)</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Save Plan</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:12px;align-items:flex-end">
+          <div style="flex:1">
+            <div class="small">Symbol</div>
+            <input class="input" placeholder="BTCUSDT" onfocus="notifyDisabled()" />
+          </div>
+          <div style="width:160px">
+            <div class="small">Size</div>
+            <input class="input" placeholder="0.1" onfocus="notifyDisabled()" />
+          </div>
+          <div style="width:180px">
+            <div class="small">Risk %</div>
+            <input class="input" placeholder="1%" onfocus="notifyDisabled()" />
+          </div>
+          <div><button class="button" onclick="notifyDisabled()">Add to Plan</button></div>
+        </div>
+
+        <div style="margin-top:12px" class="small">Planned trades (mock)</div>
+        <ul style="margin-top:6px" class="small">
+          <li>BTCUSDT — Size 0.1 — Risk 1% — note: scalp</li>
+          <li>AAPL — Size 10 — Risk 0.5% — note: swing</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section class="panel" id="view-reports" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Reports</div>
+          <div class="small">Сгенерировать отчёт (визуально)</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Generate</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700">Monthly report (mock)</div>
+        <div class="small">October — P/L +$3,400 — 12 trades</div>
+        <div style="margin-top:8px"><button class="tab" onclick="notifyDisabled()">Download PDF</button></div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="panel" id="view-settings" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Settings</div>
+          <div class="small">Theme, currency, chart options (visual)</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Save (disabled)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="flex:1">
+            <div class="small">Currency</div>
+            <select class="input" onchange="notifyDisabled()">
+              <option>USD</option><option>EUR</option><option>USDT</option>
+            </select>
+          </div>
+          <div style="width:180px">
+            <div class="small">Theme</div>
+            <select class="input" onchange="notifyDisabled()">
+              <option>Dark</option><option>Light (mock)</option>
+            </select>
+          </div>
+          <div style="width:160px">
+            <div class="small">Precision</div>
+            <input class="input" value="2" onchange="notifyDisabled()" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Account (login mock) -->
+    <section class="panel" id="view-account" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Account</div>
+          <div class="small">Mock login / subscription state</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Upgrade (disabled)</button>
+        </div>
+      </div>
+
+      <div class="card" style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div class="small">Email</div>
+          <input class="input" placeholder="you@example.com" onfocus="notifyDisabled()" />
+          <div style="height:12px"></div>
+          <div class="small">Subscription</div>
+          <div class="small">Free (mock)</div>
+        </div>
+        <div style="width:160px">
+          <div class="small">Status</div>
+          <div style="font-weight:700;color:var(--muted)">Mock — no backend</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Import -->
+    <section class="panel" id="view-import" style="display:none">
+      <div class="header">
+        <div>
+          <div class="title">Import</div>
+          <div class="small">API keys / CSV import (disabled)</div>
+        </div>
+        <div class="actions">
+          <button class="tab" onclick="notifyDisabled()">Upload CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="small">Supported integrations (visual only)</div>
+        <ul class="small">
+          <li>Binance (mock)</li>
+          <li>Interactive Brokers (mock)</li>
+          <li>CSV import (mock)</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RIGHT -->
+  <aside class="right">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">Quick Stats</div>
+          <div class="small">Realtime panel — visual</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700">+$12,480</div>
+          <div class="small">Since start</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-weight:700">Risk Overview</div>
+        <div class="small">Max position size: 3.5% | Max drawdown: -8.2%</div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700">Recent trades (mock)</div>
+      <div style="margin-top:8px">
+        <div class="small">2025-11-08 — BTCUSDT — LONG — +$420</div>
+        <div class="small">2025-11-07 — AAPL — SHORT — +$120</div>
+        <div class="small">2025-11-05 — EURUSD — LONG — -$80</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700">Help</div>
+      <div class="small">This is a UI mock. All actions that require backend are disabled.</div>
+      <div style="margin-top:8px"><button class="tab" onclick="openModal('about')">About mock</button></div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- Modal backdrop -->
+<div id="modalBackdrop" class="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+    <h3 id="modalTitle">Modal</h3>
+    <div id="modalBody" class="small" style="margin-bottom:12px">Контент модалки</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="button" onclick="closeModal()">Close</button>
+      <button class="tab" onclick="notifyDisabled()">Action (disabled)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* -----------------------
+   Simple view switching
+   ----------------------- */
+const views = ['dashboard','journal','analytics','heatmap','planner','reports','settings','account','import'];
+const nav = document.getElementById('leftNav');
+nav.addEventListener('click', (e)=>{
+  if(e.target.tagName!=='BUTTON') return;
+  const view = e.target.dataset.view;
+  if(!view) return;
+  // highlight
+  Array.from(nav.querySelectorAll('button')).forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  // show/hide
+  views.forEach(v=>{
+    const el = document.getElementById('view-'+v);
+    if(!el) return;
+    el.style.display = (v===view)?'block':'none';
+  });
+});
+
+/* -----------------------
+   Modal helpers
+   ----------------------- */
+function openModal(name){
+  document.getElementById('modalBackdrop').style.display='flex';
+  const title = document.getElementById('modalTitle');
+  const body = document.getElementById('modalBody');
+  if(name==='addTrade'){
+    title.textContent = 'Add Trade — (mock)';
+    body.innerHTML = 'Форма добавления сделки отключена в визуальном макете. Это только интерфейс.';
+  } else if(name==='about'){
+    title.textContent = 'About this mock';
+    body.innerHTML = 'Это визуальная реплика интерфейса — все действия требующие серверной логики отключены.';
+  } else {
+    title.textContent = 'Modal';
+    body.innerHTML = 'Контент';
+  }
+}
+function closeModal(e){
+  if(e && e.target!==document.getElementById('modalBackdrop')) return;
+  document.getElementById('modalBackdrop').style.display='none';
+}
+
+/* -----------------------
+   Disabled action notice
+   ----------------------- */
+function notifyDisabled(){
+  // small toast-like alert
+  const n = document.createElement('div');
+  n.textContent = 'Функция отключена в макете (без бекенда)';
+  n.style.position='fixed';
+  n.style.right='18px';
+  n.style.bottom='18px';
+  n.style.background='rgba(12,18,22,0.95)';
+  n.style.color='#fff';
+  n.style.padding='10px 12px';
+  n.style.borderRadius='8px';
+  n.style.boxShadow='0 6px 18px rgba(0,0,0,0.6)';
+  document.body.appendChild(n);
+  setTimeout(()=>n.style.opacity='0.0',2500);
+  setTimeout(()=>n.remove(),3000);
+}
+
+/* -----------------------
+   Dummy trades (visual)
+   ----------------------- */
+const dummyTrades = [
+  {date:'2025-11-08',symbol:'BTCUSDT',side:'LONG',entry:41300,exit:41720,size:0.1,pl:42,plp:1.02,note:'scalp'},
+  {date:'2025-11-07',symbol:'AAPL',side:'SHORT',entry:175.5,exit:170.0,size:10,pl:55,plp:3.14,note:'earnings fade'},
+  {date:'2025-11-05',symbol:'EURUSD',side:'LONG',entry:1.080,exit:1.082,size:10000,pl:20,plp:0.18,note:'breakout'},
+  {date:'2025-10-29',symbol:'ETHUSDT',side:'LONG',entry:2400,exit:2600,size:0.5,pl:100,plp:8.33,note:'swing'},
+  {date:'2025-10-21',symbol:'TSLA',side:'SHORT',entry:245.0,exit:230.0,size:5,pl:75,plp:6.12,note:'mean reversion'},
+  {date:'2025-10-05',symbol:'SPX',side:'LONG',entry:4500,exit:4520,size:1,pl:20,plp:0.44,note:'breakout'},
+];
+
+function populateJournal(){
+  const tbody = document.getElementById('journalTable');
+  tbody.innerHTML='';
+  dummyTrades.forEach(t=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${t.date}</td>
+      <td>${t.symbol}</td>
+      <td><span class="tag">${t.side}</span></td>
+      <td>${t.entry}</td>
+      <td>${t.exit}</td>
+      <td>${t.size}</td>
+      <td style="color:${t.pl>=0? 'lightgreen':'#ff8b8b'}">${t.pl>=0? '+'+t.pl : t.pl}</td>
+      <td>${t.plp}%</td>
+      <td>${t.note}</td>
+      <td>
+        <button class="tab" onclick="notifyDisabled()">Edit</button>
+        <button class="tab" onclick="notifyDisabled()">Details</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+populateJournal();
+
+/* -----------------------
+   Charts (Chart.js)
+   ----------------------- */
+function makeEquityChart(){
+  const ctx = document.getElementById('equityMain').getContext('2d');
+  const labels = ['2025-08-01','2025-08-15','2025-09-01','2025-09-15','2025-10-01','2025-10-15','2025-11-01','2025-11-08'];
+  const data = [8520,9000,9800,10320,11200,11800,12100,12480];
+  new Chart(ctx,{
+    type:'line',
+    data:{labels, datasets:[{label:'Equity', data, fill:true, tension:0.3, borderColor:'#4fd1c5', backgroundColor:'rgba(79,209,197,0.08)'}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:false}}
+  });
+}
+makeEquityChart();
+
+function makeDailyBar(){
+  const ctx = document.getElementById('dailyBar').getContext('2d');
+  const labels = Array.from({length:15}, (_,i)=>`D-${14-i}`);
+  const data = labels.map((_,i)=> (Math.sin(i/2)*120 + (Math.random()*60-30)).toFixed(0));
+  new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Daily P/L',data,backgroundColor:'rgba(123,97,255,0.6)'}]},options:{plugins:{legend:{display:false}}}});
+}
+makeDailyBar();
+
+function makeDist(){
+  const ctx = document.getElementById('distChart').getContext('2d');
+  const data = Array.from({length:10},()=>Math.floor(Math.random()*200-50));
+  new Chart(ctx,{type:'bar',data:{labels:data.map((_,i)=>i+1),datasets:[{label:'Returns',data,backgroundColor:'rgba(79,209,197,0.6)'}]},options:{plugins:{legend:{display:false}}}});
+}
+makeDist();
+
+function makeScatter(){
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+  const pts = Array.from({length:30},(_,i)=>({x:Math.random()*20, y:(Math.random()*400-150)}));
+  new Chart(ctx,{type:'scatter',data:{datasets:[{label:'Trade length vs P/L',data:pts,backgroundColor:'rgba(123,97,255,0.8)'}]},options:{scales:{x:{title:{display:true,text:'Trade length (days)'}},y:{title:{display:true,text:'P/L ($)'}}}}});
+}
+makeScatter();
+
+/* Prevent real storage/actions — visual only */
+window.addEventListener('beforeunload', (e)=> {
+  // do nothing, avoid accidental data thinking
+});
+
+/* initial view */
+Array.from(document.querySelectorAll('#leftNav button'))[0].click();
+
+</script>
 </body>
 </html>
+
