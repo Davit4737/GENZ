@@ -1,687 +1,608 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Edgewonk — Visual Mock (без бекенда)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Local Trading Journal — Full (Offline)</title>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
 :root{
-  --bg:#0b1220; --panel:#0e1622; --muted:#93a1ad; --accent:#4fd1c5;
-  --accent-2:#7b61ff; --danger:#ff6b6b; --glass: rgba(255,255,255,0.03);
-  --card-radius:10px; --pad:14px;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --bg:#071220; --panel:#0b1622; --muted:#9fb0bb; --accent:#28c7a9; --danger:#ff6b6b;
+  --card-radius:10px;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
 body{
-  margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: linear-gradient(180deg,#06101a 0%, #081424 100%); color:#e6eef3; -webkit-font-smoothing:antialiased;
-  padding:18px;
+  margin:0; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:linear-gradient(180deg,#041021,#071428); color:#e6f0f6; padding:16px;
 }
+.wrapper{display:grid;grid-template-columns:360px 1fr;gap:16px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.h-left{display:flex;gap:12px;align-items:center}
+.logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#7b61ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#052;}
+.title{font-size:18px;font-weight:700}
+.small{color:var(--muted);font-size:13px}
 
-/* Layout */
-.app{
-  display:grid; grid-template-columns:260px 1fr 360px; gap:16px;
-  align-items:start;
+/* left panel */
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding:12px; border-radius:var(--card-radius);}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-row > *{flex:1}
+input[type="text"],input[type="number"],input[type="date"],select,textarea{
+  width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.04);
+  background:transparent; color:inherit; font-size:13px;
 }
+button{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#022;cursor:pointer}
+button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+.small-btn{padding:6px 8px;font-size:13px;border-radius:6px}
 
-/* Sidebar */
-.sidebar{
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-  border-radius:var(--card-radius); padding:12px; height:calc(100vh - 36px); overflow:auto;
-  box-shadow: 0 8px 30px rgba(1,6,18,0.6);
-}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.logo{
-  width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  display:flex;align-items:center;justify-content:center;font-weight:700;color:#012;letter-spacing:0.6px;
-}
-.brand h2{margin:0;font-size:16px}
-.nav{margin-top:8px}
-.nav button{
-  display:flex;gap:10px;align-items:center;width:100%;border:0;background:transparent;color:var(--muted);
-  padding:10px;border-radius:8px;text-align:left;cursor:pointer;font-size:14px;
-}
-.nav button.active{background:linear-gradient(90deg, rgba(79,209,197,0.06), rgba(123,97,255,0.03));color:var(--accent)}
-.nav button:hover{color:#fff}
+/* center */
+.main{display:flex;flex-direction:column;gap:12px}
+.top-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-row{display:flex;gap:8px;align-items:center}
+.table-card{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:10px;text-align:left;color:var(--muted);border-bottom:1px dashed rgba(255,255,255,0.03)}
+tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02)}
+.badge{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:12px}
 
-/* Center area */
-.panel{
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-  border-radius:var(--card-radius); padding:14px; min-height:200px; box-shadow: 0 8px 30px rgba(1,6,18,0.6);
-}
-.header{
-  display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;
-}
-.header .title{font-size:18px;font-weight:600}
-.header .actions{display:flex;gap:8px;align-items:center}
+/* stats & charts */
+.stats{display:flex;gap:8px}
+.stat{flex:1;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02)}
+canvas{width:100%!important;height:220px!important;background:transparent}
 
-/* dashboard grid */
-.grid{
-  display:grid; grid-template-columns: repeat(3,1fr); gap:12px;
-}
-.card{
-  background:var(--panel); padding:12px;border-radius:10px; min-height:80px;
-}
-.kpi{display:flex;flex-direction:column;gap:6px}
-.kpi .big{font-size:20px;font-weight:700}
-.kpi .muted{color:var(--muted);font-size:12px}
-
-/* Tabs content */
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tab{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
-.tab.active{background:linear-gradient(90deg,#0f2b26, #12203a);border:1px solid rgba(79,209,197,0.12);color:var(--accent)}
-
-/* Table */
-.table{
-  width:100%; border-collapse:collapse; font-size:13px;
-}
-.table thead th{font-size:12px;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px dashed rgba(255,255,255,0.03)}
-.table tbody td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02)}
-.table .tag{padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:12px}
-
-/* Right column */
-.right{
-  display:flex;flex-direction:column;gap:12px;height:calc(100vh - 36px);overflow:auto;
-}
-
-/* Mini components */
-.search{display:flex;gap:8px;align-items:center}
-.input{background:var(--glass);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.03);color:inherit}
-
-/* Modals / tooltips */
-.modal-backdrop{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(1,4,10,0.6);display:none;align-items:center;justify-content:center}
-.modal{background:#07131a;padding:18px;border-radius:12px;width:820px;max-width:95%}
-.modal h3{margin:0 0 12px 0}
-.button{padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#022;cursor:pointer}
-
-/* small helpers */
-.row{display:flex;gap:10px;align-items:center}
-.col{display:flex;flex-direction:column;gap:6px}
-.small{font-size:13px;color:var(--muted)}
-.footer{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+/* footer */
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:8px}
 
 /* responsive */
-@media(max-width:1100px){
-  .app{grid-template-columns:220px 1fr}
-  .right{display:none}
-}
-@media(max-width:700px){
-  body{padding:10px}
-  .app{grid-template-columns:1fr}
-  .sidebar{height:auto}
+@media(max-width:1000px){
+  .wrapper{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
-  <div style="font-weight:700;color:var(--muted)">Visual mock</div>
-  <div style="color:var(--muted)">— фулл интерфейс (без бекенда)</div>
-</div>
-
-<div class="app">
-
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">EW</div>
-      <div>
-        <h2 style="margin:0">Edgewonk UI — Mock</h2>
-        <div class="small">Визуальный макет — без бекенда</div>
-      </div>
+<div class="header">
+  <div class="h-left">
+    <div class="logo">TJ</div>
+    <div>
+      <div class="title">Local Trading Journal — Full</div>
+      <div class="small">Офлайн. Добавление/Импорт/Экспорт/Аналитика по неделям/месяцам.</div>
     </div>
-
-    <nav class="nav" id="leftNav">
-      <button class="active" data-view="dashboard">Dashboard</button>
-      <button data-view="journal">Journal</button>
-      <button data-view="analytics">Analytics</button>
-      <button data-view="heatmap">Heatmap</button>
-      <button data-view="planner">Trade Planner</button>
-      <button data-view="reports">Reports</button>
-      <button data-view="settings">Settings</button>
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:10px 0">
-      <button data-view="account">Account (Login)</button>
-      <button data-view="import">Import (API)</button>
-    </nav>
-
-    <div style="margin-top:14px">
-      <div class="small" style="margin-bottom:8px">Dummy data</div>
-      <div style="display:grid;gap:8px">
-        <div style="background:linear-gradient(90deg, rgba(79,209,197,0.06), rgba(123,97,255,0.03));padding:10px;border-radius:8px">
-          <div style="font-size:14px;font-weight:700">Equity</div>
-          <div style="font-size:18px">+$12,480</div>
-          <div class="small">Period: 3 months</div>
-        </div>
-        <div style="background:var(--panel);padding:10px;border-radius:8px">
-          <div class="small">Win Rate</div>
-          <div style="font-weight:700">62%</div>
-        </div>
-        <div style="background:var(--panel);padding:10px;border-radius:8px">
-          <div class="small">Avg P/L</div>
-          <div style="font-weight:700">+$85</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">
-      Макет: интерфейсный клон | Серия: 1.0
-    </div>
-  </aside>
-
-  <!-- CENTER -->
-  <main>
-
-    <!-- Dashboard panel -->
-    <section class="panel" id="view-dashboard">
-      <div class="header">
-        <div>
-          <div class="title">Dashboard</div>
-          <div class="small">Обзор счёта, equity, быстрые KPI</div>
-        </div>
-        <div class="actions">
-          <button class="tab active" onclick="openModal('addTrade')">+ Add Trade (disabled)</button>
-          <button class="tab" onclick="notifyDisabled()">Sync (disabled)</button>
-          <div style="width:12px"></div>
-          <div class="small">Mock UI</div>
-        </div>
-      </div>
-
-      <div class="grid" style="margin-bottom:12px">
-        <div class="card kpi">
-          <div class="small">Баланс</div>
-          <div class="big">+$12480</div>
-          <div class="muted">Начальный капитал: $8,520</div>
-        </div>
-
-        <div class="card kpi">
-          <div class="small">Win Rate</div>
-          <div class="big">62%</div>
-          <div class="muted">28 выигрышей / 45 сделок</div>
-        </div>
-
-        <div class="card kpi">
-          <div class="small">Avg P/L</div>
-          <div class="big">+$85</div>
-          <div class="muted">Средняя прибыль/сделка</div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px">
-        <div style="flex:2" class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-weight:700">Equity Curve</div>
-            <div class="small">Period: 90d</div>
-          </div>
-          <canvas id="equityMain" height="160"></canvas>
-        </div>
-
-        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div style="font-weight:700">Daily P/L</div><div class="small">Last 30 days</div>
-            </div>
-            <canvas id="dailyBar" height="120"></canvas>
-          </div>
-
-          <div class="card">
-            <div style="font-weight:700;margin-bottom:8px">Top Symbols</div>
-            <div class="small">BTCUSDT +$5,200</div>
-            <div class="small">AAPL +$2,600</div>
-            <div class="small">EURUSD +$1,180</div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Journal panel -->
-    <section class="panel" id="view-journal" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Journal</div>
-          <div class="small">Список сделок — визуальный макет</div>
-        </div>
-        <div class="actions">
-          <div class="search">
-            <input class="input" placeholder="Поиск по символу / заметке" oninput="notifyDisabled()" />
-            <button class="tab" onclick="notifyDisabled()">Filter</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px" class="tabs">
-        <div class="tab active">All</div>
-        <div class="tab" onclick="notifyDisabled()">Longs</div>
-        <div class="tab" onclick="notifyDisabled()">Shorts</div>
-        <div class="tab" onclick="notifyDisabled()">Tagged</div>
-      </div>
-
-      <div class="card" style="padding:6px;">
-        <table class="table">
-          <thead><tr>
-            <th>Дата</th><th>Символ</th><th>Тип</th><th>Entry</th><th>Exit</th><th>Size</th><th>P/L</th><th>%</th><th>Note</th><th>Actions</th>
-          </tr></thead>
-          <tbody id="journalTable">
-            <!-- populated by JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:12px;display:flex;gap:12px">
-        <div class="card" style="flex:1">
-          <div style="font-weight:700">Weekly summary</div>
-          <div class="small">Week 44 — P/L +$1,200 — 6 trades</div>
-          <div class="small">Week 43 — P/L -$320 — 4 trades</div>
-        </div>
-        <div class="card" style="flex:1">
-          <div style="font-weight:700">Notes / Journal</div>
-          <div class="small">Макет: здесь отображается текстовый журнал (disabled)</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Analytics panel -->
-    <section class="panel" id="view-analytics" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Analytics</div>
-          <div class="small">Metrics, distributions, performance</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Export PDF</button>
-          <button class="tab" onclick="notifyDisabled()">Advanced metrics</button>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px">
-        <div style="flex:1" class="card">
-          <div style="font-weight:700;margin-bottom:8px">Distribution of returns</div>
-          <canvas id="distChart" height="140"></canvas>
-        </div>
-        <div style="flex:1" class="card">
-          <div style="font-weight:700;margin-bottom:8px">Trade length vs P/L</div>
-          <canvas id="scatterChart" height="140"></canvas>
-        </div>
-        <div style="width:280px" class="card">
-          <div style="font-weight:700;margin-bottom:8px">Key metrics</div>
-          <div class="small">Profit Factor: 1.48</div>
-          <div class="small">Max Drawdown: -8.2%</div>
-          <div class="small">Expectancy: +0.95</div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Heatmap panel -->
-    <section class="panel" id="view-heatmap" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Heatmap</div>
-          <div class="small">Time-of-day / day-of-week performance</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Recalc (disabled)</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:700;margin-bottom:8px">Time Heatmap (mock)</div>
-        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">
-          <!-- dummy cells -->
-          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">MON<br><strong>+120</strong></div>
-          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">TUE<br><strong>-20</strong></div>
-          <div style="padding:14px;background:#07302a;border-radius:8px;text-align:center">WED<br><strong>+400</strong></div>
-          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">THU<br><strong>+60</strong></div>
-          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">FRI<br><strong>-80</strong></div>
-          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">SAT<br><strong>+20</strong></div>
-          <div style="padding:14px;background:#072025;border-radius:8px;text-align:center">SUN<br><strong>+10</strong></div>
-          <div style="padding:14px;background:#08151a;border-radius:8px;text-align:center">ALL<br><strong>+520</strong></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Planner -->
-    <section class="panel" id="view-planner" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Trade Planner</div>
-          <div class="small">Plan trades / risk sizing (visual only)</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Save Plan</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;gap:12px;align-items:flex-end">
-          <div style="flex:1">
-            <div class="small">Symbol</div>
-            <input class="input" placeholder="BTCUSDT" onfocus="notifyDisabled()" />
-          </div>
-          <div style="width:160px">
-            <div class="small">Size</div>
-            <input class="input" placeholder="0.1" onfocus="notifyDisabled()" />
-          </div>
-          <div style="width:180px">
-            <div class="small">Risk %</div>
-            <input class="input" placeholder="1%" onfocus="notifyDisabled()" />
-          </div>
-          <div><button class="button" onclick="notifyDisabled()">Add to Plan</button></div>
-        </div>
-
-        <div style="margin-top:12px" class="small">Planned trades (mock)</div>
-        <ul style="margin-top:6px" class="small">
-          <li>BTCUSDT — Size 0.1 — Risk 1% — note: scalp</li>
-          <li>AAPL — Size 10 — Risk 0.5% — note: swing</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Reports -->
-    <section class="panel" id="view-reports" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Reports</div>
-          <div class="small">Сгенерировать отчёт (визуально)</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Generate</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:700">Monthly report (mock)</div>
-        <div class="small">October — P/L +$3,400 — 12 trades</div>
-        <div style="margin-top:8px"><button class="tab" onclick="notifyDisabled()">Download PDF</button></div>
-      </div>
-    </section>
-
-    <!-- Settings -->
-    <section class="panel" id="view-settings" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Settings</div>
-          <div class="small">Theme, currency, chart options (visual)</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Save (disabled)</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;gap:12px;align-items:center">
-          <div style="flex:1">
-            <div class="small">Currency</div>
-            <select class="input" onchange="notifyDisabled()">
-              <option>USD</option><option>EUR</option><option>USDT</option>
-            </select>
-          </div>
-          <div style="width:180px">
-            <div class="small">Theme</div>
-            <select class="input" onchange="notifyDisabled()">
-              <option>Dark</option><option>Light (mock)</option>
-            </select>
-          </div>
-          <div style="width:160px">
-            <div class="small">Precision</div>
-            <input class="input" value="2" onchange="notifyDisabled()" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Account (login mock) -->
-    <section class="panel" id="view-account" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Account</div>
-          <div class="small">Mock login / subscription state</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Upgrade (disabled)</button>
-        </div>
-      </div>
-
-      <div class="card" style="display:flex;gap:12px;align-items:center">
-        <div style="flex:1">
-          <div class="small">Email</div>
-          <input class="input" placeholder="you@example.com" onfocus="notifyDisabled()" />
-          <div style="height:12px"></div>
-          <div class="small">Subscription</div>
-          <div class="small">Free (mock)</div>
-        </div>
-        <div style="width:160px">
-          <div class="small">Status</div>
-          <div style="font-weight:700;color:var(--muted)">Mock — no backend</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Import -->
-    <section class="panel" id="view-import" style="display:none">
-      <div class="header">
-        <div>
-          <div class="title">Import</div>
-          <div class="small">API keys / CSV import (disabled)</div>
-        </div>
-        <div class="actions">
-          <button class="tab" onclick="notifyDisabled()">Upload CSV</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="small">Supported integrations (visual only)</div>
-        <ul class="small">
-          <li>Binance (mock)</li>
-          <li>Interactive Brokers (mock)</li>
-          <li>CSV import (mock)</li>
-        </ul>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- RIGHT -->
-  <aside class="right">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700">Quick Stats</div>
-          <div class="small">Realtime panel — visual</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-weight:700">+$12,480</div>
-          <div class="small">Since start</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <div style="font-weight:700">Risk Overview</div>
-        <div class="small">Max position size: 3.5% | Max drawdown: -8.2%</div>
-      </div>
-
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700">Recent trades (mock)</div>
-      <div style="margin-top:8px">
-        <div class="small">2025-11-08 — BTCUSDT — LONG — +$420</div>
-        <div class="small">2025-11-07 — AAPL — SHORT — +$120</div>
-        <div class="small">2025-11-05 — EURUSD — LONG — -$80</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700">Help</div>
-      <div class="small">This is a UI mock. All actions that require backend are disabled.</div>
-      <div style="margin-top:8px"><button class="tab" onclick="openModal('about')">About mock</button></div>
-    </div>
-
-  </aside>
-</div>
-
-<!-- Modal backdrop -->
-<div id="modalBackdrop" class="modal-backdrop" onclick="closeModal(event)">
-  <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
-    <h3 id="modalTitle">Modal</h3>
-    <div id="modalBody" class="small" style="margin-bottom:12px">Контент модалки</div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="button" onclick="closeModal()">Close</button>
-      <button class="tab" onclick="notifyDisabled()">Action (disabled)</button>
-    </div>
+  </div>
+  <div>
+    <button id="exportCSV">Экспорт CSV</button>
+    <button id="importBtn" class="ghost">Импорт CSV</button>
+    <input type="file" id="importFile" accept=".csv" style="display:none">
+    <button id="resetAll" class="small-btn ghost" title="Очистить все данные">Сброс</button>
   </div>
 </div>
 
+<div class="wrapper">
+
+  <!-- LEFT: form -->
+  <aside>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700">Добавить / Редактировать сделку</div>
+        <div class="small">Локально</div>
+      </div>
+
+      <form id="tradeForm">
+        <input type="hidden" id="tradeId" value="">
+        <div class="form-row">
+          <div>
+            <label class="small">Символ</label>
+            <input id="symbol" type="text" placeholder="BTCUSDT">
+          </div>
+          <div>
+            <label class="small">Тип</label>
+            <select id="side">
+              <option value="LONG">LONG</option>
+              <option value="SHORT">SHORT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label class="small">Цена входа</label>
+            <input id="entry" type="number" step="any">
+          </div>
+          <div>
+            <label class="small">Цена выхода</label>
+            <input id="exit" type="number" step="any">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label class="small">Лоты / Количество</label>
+            <input id="size" type="number" step="any" value="1">
+          </div>
+          <div>
+            <label class="small">Комиссия (в $)</label>
+            <input id="commission" type="number" step="any" value="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="small">Дата</label>
+            <input id="date" type="date">
+          </div>
+          <div style="width:120px">
+            <label class="small">Валюта P/L</label>
+            <select id="plCurrency">
+              <option value="USD">USD</option>
+              <option value="USDT">USDT</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px">
+          <label class="small">Заметка</label>
+          <textarea id="notes" rows="3" style="width:100%;border-radius:6px;padding:8px;border:1px solid rgba(255,255,255,0.04)"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button type="submit">Сохранить</button>
+          <button type="button" id="clearForm" class="ghost">Очистить форму</button>
+        </div>
+      </form>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:8px">Фильтры / Просмотр</div>
+      <div class="form-row">
+        <input id="filterSymbol" type="text" placeholder="фильтр по символу">
+        <select id="filterSide">
+          <option value="">Все</option><option value="LONG">LONG</option><option value="SHORT">SHORT</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <input id="filterFrom" type="date">
+        <input id="filterTo" type="date">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="applyFilters" class="small-btn">Применить</button>
+        <button id="resetFilters" class="small-btn ghost">Сбросить</button>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:8px">Quick stats</div>
+      <div id="quickStats" class="small">
+        Сделок: 0<br>Общий P/L: 0<br>Win rate: 0%
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN: table + charts -->
+  <main class="main">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700">Сделки</div>
+        <div class="small">Импорт/Экспорт CSV | Данные в localStorage</div>
+      </div>
+
+      <div class="table-card">
+        <table id="tradesTable" role="table" aria-label="Trades table">
+          <thead>
+            <tr>
+              <th>Дата</th><th>Символ</th><th>Тип</th><th>Entry</th><th>Exit</th><th>Size</th><th>Комм.$</th><th>P/L</th><th>%</th><th>Note</th><th>Действия</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <div class="stat">
+        <div style="font-weight:700">Equity Curve</div>
+        <canvas id="equityChart"></canvas>
+      </div>
+      <div class="stat">
+        <div style="font-weight:700">P/L per week</div>
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700">Агрегаты</div>
+        <div class="small">Сгруппировано по неделям / месяцам</div>
+      </div>
+      <div id="aggrArea" style="margin-top:8px" class="small"></div>
+    </div>
+
+    <div class="footer">Сохранение локально — файл не покидает твой компьютер. Никаких серверов.</div>
+  </main>
+
+</div>
+
 <script>
-/* -----------------------
-   Simple view switching
-   ----------------------- */
-const views = ['dashboard','journal','analytics','heatmap','planner','reports','settings','account','import'];
-const nav = document.getElementById('leftNav');
-nav.addEventListener('click', (e)=>{
-  if(e.target.tagName!=='BUTTON') return;
-  const view = e.target.dataset.view;
-  if(!view) return;
-  // highlight
-  Array.from(nav.querySelectorAll('button')).forEach(b=>b.classList.remove('active'));
-  e.target.classList.add('active');
-  // show/hide
-  views.forEach(v=>{
-    const el = document.getElementById('view-'+v);
-    if(!el) return;
-    el.style.display = (v===view)?'block':'none';
-  });
-});
+// -----------------------------
+// Utilities
+// -----------------------------
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmtNum(n){ return (Math.round(n*100)/100).toLocaleString('en'); }
+function parseDateISO(s){ if(!s) return null; const d=new Date(s); if(isNaN(d)) return null; return d; }
+function startOfWeek(date){ const d=new Date(date); const day=d.getDay(); const diff=d.getDate() - day + (day===0?-6:1); return new Date(d.setDate(diff)); } // Monday
+function isoDate(d){ if(!d) return ''; const dt=new Date(d); const y=dt.getFullYear(); const m=('0'+(dt.getMonth()+1)).slice(-2); const dd=('0'+dt.getDate()).slice(-2); return `${y}-${m}-${dd}`; }
+function weekKey(d){ const s = startOfWeek(new Date(d)); return isoDate(s); }
+function monthKey(d){ const dt=new Date(d); return dt.getFullYear() + '-' + ('0'+(dt.getMonth()+1)).slice(-2); }
 
-/* -----------------------
-   Modal helpers
-   ----------------------- */
-function openModal(name){
-  document.getElementById('modalBackdrop').style.display='flex';
-  const title = document.getElementById('modalTitle');
-  const body = document.getElementById('modalBody');
-  if(name==='addTrade'){
-    title.textContent = 'Add Trade — (mock)';
-    body.innerHTML = 'Форма добавления сделки отключена в визуальном макете. Это только интерфейс.';
-  } else if(name==='about'){
-    title.textContent = 'About this mock';
-    body.innerHTML = 'Это визуальная реплика интерфейса — все действия требующие серверной логики отключены.';
-  } else {
-    title.textContent = 'Modal';
-    body.innerHTML = 'Контент';
-  }
+// -----------------------------
+// Storage
+// -----------------------------
+const STORAGE_KEY = 'local_trades_v1';
+let trades = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+// -----------------------------
+// DOM refs
+// -----------------------------
+const tbody = document.querySelector('#tradesTable tbody');
+const form = document.getElementById('tradeForm');
+const tradeIdInput = document.getElementById('tradeId');
+const inputs = {
+  symbol: document.getElementById('symbol'),
+  side: document.getElementById('side'),
+  entry: document.getElementById('entry'),
+  exit: document.getElementById('exit'),
+  size: document.getElementById('size'),
+  commission: document.getElementById('commission'),
+  date: document.getElementById('date'),
+  notes: document.getElementById('notes'),
+  plCurrency: document.getElementById('plCurrency')
+};
+const quickStats = document.getElementById('quickStats');
+
+// filters
+const filterSymbol = document.getElementById('filterSymbol');
+const filterSide = document.getElementById('filterSide');
+const filterFrom = document.getElementById('filterFrom');
+const filterTo = document.getElementById('filterTo');
+const applyFilters = document.getElementById('applyFilters');
+const resetFilters = document.getElementById('resetFilters');
+
+// import/export
+const exportCSVBtn = document.getElementById('exportCSV');
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
+const resetAllBtn = document.getElementById('resetAll');
+
+// charts
+let equityChart=null, weeklyChart=null;
+
+// -----------------------------
+// Core calculations
+// -----------------------------
+function calcTradePL(t){
+  // pl = (exit - entry) * size (for long), reversed for short. subtract commission.
+  // If trade has explicit pl value (legacy) use it; but here compute.
+  const entry = Number(t.entry)||0;
+  const exit = Number(t.exit)||0;
+  const size = Number(t.size)||1;
+  const commission = Number(t.commission)||0;
+  let pl;
+  if(t.side === 'LONG') pl = (exit - entry) * size - commission;
+  else pl = (entry - exit) * size - commission;
+  const plp = entry!==0 ? (pl / (entry * size) * 100) : 0;
+  return {pl: +pl.toFixed(2), plp: +plp.toFixed(2)};
 }
-function closeModal(e){
-  if(e && e.target!==document.getElementById('modalBackdrop')) return;
-  document.getElementById('modalBackdrop').style.display='none';
+
+function saveAll(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
 }
 
-/* -----------------------
-   Disabled action notice
-   ----------------------- */
-function notifyDisabled(){
-  // small toast-like alert
-  const n = document.createElement('div');
-  n.textContent = 'Функция отключена в макете (без бекенда)';
-  n.style.position='fixed';
-  n.style.right='18px';
-  n.style.bottom='18px';
-  n.style.background='rgba(12,18,22,0.95)';
-  n.style.color='#fff';
-  n.style.padding='10px 12px';
-  n.style.borderRadius='8px';
-  n.style.boxShadow='0 6px 18px rgba(0,0,0,0.6)';
-  document.body.appendChild(n);
-  setTimeout(()=>n.style.opacity='0.0',2500);
-  setTimeout(()=>n.remove(),3000);
-}
-
-/* -----------------------
-   Dummy trades (visual)
-   ----------------------- */
-const dummyTrades = [
-  {date:'2025-11-08',symbol:'BTCUSDT',side:'LONG',entry:41300,exit:41720,size:0.1,pl:42,plp:1.02,note:'scalp'},
-  {date:'2025-11-07',symbol:'AAPL',side:'SHORT',entry:175.5,exit:170.0,size:10,pl:55,plp:3.14,note:'earnings fade'},
-  {date:'2025-11-05',symbol:'EURUSD',side:'LONG',entry:1.080,exit:1.082,size:10000,pl:20,plp:0.18,note:'breakout'},
-  {date:'2025-10-29',symbol:'ETHUSDT',side:'LONG',entry:2400,exit:2600,size:0.5,pl:100,plp:8.33,note:'swing'},
-  {date:'2025-10-21',symbol:'TSLA',side:'SHORT',entry:245.0,exit:230.0,size:5,pl:75,plp:6.12,note:'mean reversion'},
-  {date:'2025-10-05',symbol:'SPX',side:'LONG',entry:4500,exit:4520,size:1,pl:20,plp:0.44,note:'breakout'},
-];
-
-function populateJournal(){
-  const tbody = document.getElementById('journalTable');
-  tbody.innerHTML='';
-  dummyTrades.forEach(t=>{
+// -----------------------------
+// Rendering
+// -----------------------------
+function renderTable(filtered=null){
+  const list = filtered || trades.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  tbody.innerHTML = '';
+  list.forEach(t=>{
+    const {pl,plp} = calcTradePL(t);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${t.date}</td>
+    tr.innerHTML = `
+      <td>${t.date}</td>
       <td>${t.symbol}</td>
-      <td><span class="tag">${t.side}</span></td>
+      <td><span class="badge">${t.side}</span></td>
       <td>${t.entry}</td>
       <td>${t.exit}</td>
       <td>${t.size}</td>
-      <td style="color:${t.pl>=0? 'lightgreen':'#ff8b8b'}">${t.pl>=0? '+'+t.pl : t.pl}</td>
-      <td>${t.plp}%</td>
-      <td>${t.note}</td>
+      <td>${t.commission}</td>
+      <td style="color:${pl>=0?'#9df7c7':'#ff9b9b'}">${pl>=0? '+'+fmtNum(pl):fmtNum(pl)}</td>
+      <td>${plp}%</td>
+      <td>${(t.notes||'')}</td>
       <td>
-        <button class="tab" onclick="notifyDisabled()">Edit</button>
-        <button class="tab" onclick="notifyDisabled()">Details</button>
-      </td>`;
+        <button class="small-btn" data-id="${t.id}" onclick="editTrade(event)">Edit</button>
+        <button class="small-btn ghost" data-id="${t.id}" onclick="deleteTrade(event)">Del</button>
+      </td>
+    `;
     tbody.appendChild(tr);
   });
+  updateStats(filtered);
+  renderCharts(filtered);
+  renderAggregates(filtered);
 }
-populateJournal();
 
-/* -----------------------
-   Charts (Chart.js)
-   ----------------------- */
-function makeEquityChart(){
-  const ctx = document.getElementById('equityMain').getContext('2d');
-  const labels = ['2025-08-01','2025-08-15','2025-09-01','2025-09-15','2025-10-01','2025-10-15','2025-11-01','2025-11-08'];
-  const data = [8520,9000,9800,10320,11200,11800,12100,12480];
-  new Chart(ctx,{
+function updateStats(filtered=null){
+  const list = filtered || trades;
+  let total=0, wins=0;
+  list.forEach(t=>{
+    const {pl} = calcTradePL(t);
+    total += pl;
+    if(pl>0) wins++;
+  });
+  const wr = list.length ? Math.round((wins/list.length)*10000)/100 : 0;
+  quickStats.innerHTML = `Сделок: ${list.length}<br>Общий P/L: ${fmtNum(total)} ${list[0]?.plCurrency || 'USD'}<br>Win rate: ${wr}%`;
+}
+
+// -----------------------------
+// Charts
+// -----------------------------
+function renderCharts(filtered=null){
+  const list = (filtered || trades).slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  // equity
+  let labels = [], data = [];
+  let cum=0;
+  list.forEach(t=>{
+    const {pl} = calcTradePL(t);
+    cum += pl;
+    labels.push(t.date);
+    data.push(Math.round(cum*100)/100);
+  });
+  if(!labels.length){ labels = ['-']; data=[0]; }
+  // equityChart
+  const eqCtx = document.getElementById('equityChart').getContext('2d');
+  if(equityChart) equityChart.destroy();
+  equityChart = new Chart(eqCtx, {
     type:'line',
-    data:{labels, datasets:[{label:'Equity', data, fill:true, tension:0.3, borderColor:'#4fd1c5', backgroundColor:'rgba(79,209,197,0.08)'}]},
-    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:false}}
+    data:{labels, datasets:[{label:'Equity', data, borderColor: '#28c7a9', backgroundColor:'rgba(40,199,169,0.08)', tension:0.2}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:false}}}
+  });
+
+  // weekly aggregation
+  const weekMap = {};
+  list.forEach(t=>{
+    const wk = weekKey(t.date);
+    const {pl} = calcTradePL(t);
+    weekMap[wk] = (weekMap[wk]||0) + pl;
+  });
+  const weekLabels = Object.keys(weekMap).sort();
+  const weekData = weekLabels.map(k=>Math.round(weekMap[k]*100)/100);
+  const wkCtx = document.getElementById('weeklyChart').getContext('2d');
+  if(weeklyChart) weeklyChart.destroy();
+  weeklyChart = new Chart(wkCtx, {
+    type:'bar',
+    data:{labels:weekLabels, datasets:[{label:'P/L per week', data:weekData, backgroundColor: weekData.map(v=> v>=0? 'rgba(40,199,169,0.6)':'rgba(255,107,107,0.6)')}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{maxRotation:45,minRotation:0}}}}
   });
 }
-makeEquityChart();
 
-function makeDailyBar(){
-  const ctx = document.getElementById('dailyBar').getContext('2d');
-  const labels = Array.from({length:15}, (_,i)=>`D-${14-i}`);
-  const data = labels.map((_,i)=> (Math.sin(i/2)*120 + (Math.random()*60-30)).toFixed(0));
-  new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Daily P/L',data,backgroundColor:'rgba(123,97,255,0.6)'}]},options:{plugins:{legend:{display:false}}}});
+// -----------------------------
+// Aggregates (weekly/monthly)
+function renderAggregates(filtered=null){
+  const list = (filtered || trades);
+  const wk = {}; const mo = {};
+  list.forEach(t=>{
+    const {pl} = calcTradePL(t);
+    const w = weekKey(t.date);
+    const m = monthKey(t.date);
+    wk[w] = (wk[w]||0) + pl;
+    mo[m] = (mo[m]||0) + pl;
+  });
+  // render top 8 weeks and months
+  let html = '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+  html += '<div style="flex:1"><b>По неделям</b><br>';
+  const weekKeys = Object.keys(wk).sort().reverse();
+  weekKeys.slice(0,8).forEach(k=> html += `${k}: ${ (wk[k]>=0? '+' : '') + fmtNum(wk[k]) }<br>`);
+  html += '</div>';
+  html += '<div style="flex:1"><b>По месяцам</b><br>';
+  const monKeys = Object.keys(mo).sort().reverse();
+  monKeys.slice(0,8).forEach(k=> html += `${k}: ${ (mo[k]>=0? '+' : '') + fmtNum(mo[k]) }<br>`);
+  html += '</div></div>';
+  document.getElementById('aggrArea').innerHTML = html;
 }
-makeDailyBar();
 
-function makeDist(){
-  const ctx = document.getElementById('distChart').getContext('2d');
-  const data = Array.from({length:10},()=>Math.floor(Math.random()*200-50));
-  new Chart(ctx,{type:'bar',data:{labels:data.map((_,i)=>i+1),datasets:[{label:'Returns',data,backgroundColor:'rgba(79,209,197,0.6)'}]},options:{plugins:{legend:{display:false}}}});
-}
-makeDist();
-
-function makeScatter(){
-  const ctx = document.getElementById('scatterChart').getContext('2d');
-  const pts = Array.from({length:30},(_,i)=>({x:Math.random()*20, y:(Math.random()*400-150)}));
-  new Chart(ctx,{type:'scatter',data:{datasets:[{label:'Trade length vs P/L',data:pts,backgroundColor:'rgba(123,97,255,0.8)'}]},options:{scales:{x:{title:{display:true,text:'Trade length (days)'}},y:{title:{display:true,text:'P/L ($)'}}}}});
-}
-makeScatter();
-
-/* Prevent real storage/actions — visual only */
-window.addEventListener('beforeunload', (e)=> {
-  // do nothing, avoid accidental data thinking
+// -----------------------------
+// CRUD
+// -----------------------------
+form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const id = tradeIdInput.value || uid();
+  const t = {
+    id,
+    symbol: inputs.symbol.value.trim() || 'N/A',
+    side: inputs.side.value,
+    entry: parseFloat(inputs.entry.value) || 0,
+    exit: parseFloat(inputs.exit.value) || 0,
+    size: parseFloat(inputs.size.value) || 1,
+    commission: parseFloat(inputs.commission.value) || 0,
+    date: inputs.date.value || isoDate(new Date()),
+    notes: inputs.notes.value || '',
+    plCurrency: inputs.plCurrency.value || 'USD'
+  };
+  const existing = trades.findIndex(x=>x.id===id);
+  if(existing>=0) trades[existing] = t; else trades.push(t);
+  saveAll();
+  renderTable();
+  form.reset();
+  tradeIdInput.value='';
 });
 
-/* initial view */
-Array.from(document.querySelectorAll('#leftNav button'))[0].click();
+window.editTrade = function(e){
+  const id = e.target.dataset.id;
+  const t = trades.find(x=>x.id===id);
+  if(!t) return alert('Trade not found');
+  tradeIdInput.value = t.id;
+  inputs.symbol.value = t.symbol;
+  inputs.side.value = t.side;
+  inputs.entry.value = t.entry;
+  inputs.exit.value = t.exit;
+  inputs.size.value = t.size;
+  inputs.commission.value = t.commission;
+  inputs.date.value = t.date;
+  inputs.notes.value = t.notes;
+  inputs.plCurrency.value = t.plCurrency || 'USD';
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+window.deleteTrade = function(e){
+  const id = e.target.dataset.id;
+  if(!confirm('Удалить сделку?')) return;
+  trades = trades.filter(x=>x.id!==id);
+  saveAll();
+  renderTable();
+};
+
+// -----------------------------
+// Filters
+// -----------------------------
+applyFilters.addEventListener('click', ()=>{
+  const sym = filterSymbol.value.trim().toLowerCase();
+  const side = filterSide.value;
+  const from = filterFrom.value ? new Date(filterFrom.value) : null;
+  const to = filterTo.value ? new Date(filterTo.value) : null;
+  const filtered = trades.filter(t=>{
+    if(sym && !t.symbol.toLowerCase().includes(sym)) return false;
+    if(side && t.side !== side) return false;
+    const d = new Date(t.date);
+    if(from && d < from) return false;
+    if(to && d > to) return false;
+    return true;
+  });
+  renderTable(filtered);
+});
+resetFilters.addEventListener('click', ()=>{
+  filterSymbol.value=''; filterSide.value=''; filterFrom.value=''; filterTo.value='';
+  renderTable();
+});
+
+// -----------------------------
+// Import / Export CSV
+// -----------------------------
+function toCSV(arr){
+  // header
+  const hdr = ['id','date','symbol','side','entry','exit','size','commission','notes','plCurrency'];
+  const rows = [hdr.join(',')];
+  arr.forEach(t=>{
+    const vals = hdr.map(k => {
+      let v = t[k]===undefined ? '' : String(t[k]);
+      if(v.includes(',')) v = `"${v.replace(/"/g,'""')}"`;
+      return v;
+    });
+    rows.push(vals.join(','));
+  });
+  return rows.join('\n');
+}
+
+exportCSVBtn.addEventListener('click', ()=>{
+  if(!trades.length) return alert('Нет сделок для экспорта');
+  const csv = toCSV(trades);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'trades_export.csv'; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', ()=> importFile.click());
+importFile.addEventListener('change', (ev)=>{
+  const f = ev.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const text = e.target.result;
+    const parsed = parseCSV(text);
+    // Map and append, but avoid id collisions
+    parsed.forEach(r=>{
+      if(!r.id) r.id = uid();
+      trades.push(r);
+    });
+    saveAll(); renderTable();
+    alert('Импорт завершён: ' + parsed.length + ' строк(и)');
+  };
+  reader.readAsText(f);
+  importFile.value = '';
+});
+
+function parseCSV(text){
+  // minimal CSV parser (handles quotes)
+  const lines = text.split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(!lines.length) return [];
+  const headers = parseCSVLine(lines[0]);
+  const out = [];
+  for(let i=1;i<lines.length;i++){
+    const vals = parseCSVLine(lines[i]);
+    if(vals.length===0) continue;
+    const obj = {};
+    headers.forEach((h,idx)=> obj[h]= vals[idx] || '');
+    // cast numeric fields
+    obj.entry = parseFloat(obj.entry) || 0;
+    obj.exit = parseFloat(obj.exit) || 0;
+    obj.size = parseFloat(obj.size) || 1;
+    obj.commission = parseFloat(obj.commission) || 0;
+    out.push(obj);
+  }
+  return out;
+}
+
+function parseCSVLine(line){
+  const res=[]; let cur=''; let inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(inQuotes){
+      if(ch==='\"'){ if(line[i+1]==='\"'){ cur+='"'; i++; } else inQuotes=false; }
+      else cur+=ch;
+    } else {
+      if(ch===','){ res.push(cur); cur=''; }
+      else if(ch==='\"'){ inQuotes=true; }
+      else cur+=ch;
+    }
+  }
+  res.push(cur);
+  return res.map(s=>s.trim());
+}
+
+// -----------------------------
+// Reset all
+resetAllBtn.addEventListener('click', ()=>{
+  if(!confirm('Вы точно хотите очистить все данные из localStorage?')) return;
+  trades = []; saveAll(); renderTable();
+});
+
+// -----------------------------
+// Init with sample data if empty
+function seedIfEmpty(){
+  if(trades.length) return;
+  trades = [
+    { id: uid(), date: isoDate(new Date()), symbol:'BTCUSDT', side:'LONG', entry:42000, exit:42350, size:0.1, commission:1.5, notes:'sample scalp', plCurrency:'USD' },
+    { id: uid(), date: isoDate(new Date(Date.now()-86400000*2)), symbol:'AAPL', side:'SHORT', entry:170, exit:165, size:10, commission:1, notes:'earnings fade', plCurrency:'USD' },
+    { id: uid(), date: isoDate(new Date(Date.now()-86400000*8)), symbol:'ETHUSDT', side:'LONG', entry:2400, exit:2600, size:0.5, commission:0.5, notes:'swing', plCurrency:'USD' },
+  ];
+  saveAll();
+}
+
+seedIfEmpty();
+renderTable();
+
+// -----------------------------
+// Accessibility: expose functions to window for inline onclick
+window.editTrade = editTrade;
+window.deleteTrade = deleteTrade;
 
 </script>
+
 </body>
 </html>
-
