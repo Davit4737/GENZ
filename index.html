@@ -1,103 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infoflare Quick Facts for Curious Minds</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a6a3a8e6e8a441fd9cc751449856f91a"}'></script>
-    <script>(function(s){s.dataset.zone='10277031',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='10277037',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script src="https://3nbf4.com/act/files/tag.min.js?z=10274316" data-cfasync="false" async></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini TOEFL iBT Practice Test</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --panel:#ffffff;
+      --panel2:#eef3ff;
+      --text:#18243d;
+      --muted:#5a6783;
+      --accent:#2f5bea;
+      --ok:#118a4e;
+      --warn:#d08a00;
+      --bad:#c9372c;
+      --line:#d7dfef;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    .wrap{max-width:1120px;margin:0 auto;padding:24px}
+    .hero,.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(15,35,95,.06)}
+    .hero{padding:28px;margin-bottom:18px}
+    .card{padding:22px;margin-bottom:16px}
+    h1,h2,h3{margin:0 0 12px}
+    h1{font-size:32px}
+    h2{font-size:24px}
+    h3{font-size:18px}
+    p{margin:8px 0}
+    .muted{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .col-8{grid-column:span 8}.col-4{grid-column:span 4}.col-12{grid-column:span 12}
+    @media (max-width:900px){.col-8,.col-4,.col-12{grid-column:span 12}}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px;margin:4px 6px 0 0}
+    .timer{font-size:32px;font-weight:700;letter-spacing:1px}
+    .timer.ok{color:var(--ok)} .timer.warn{color:var(--warn)} .timer.bad{color:var(--bad)}
+    .q{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fbfcff;margin:12px 0}
+    label{display:block;margin:8px 0;cursor:pointer}
+    input[type="radio"]{margin-right:8px}
+    textarea,input[type="text"]{
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);
+      resize:vertical;font:inherit;
+    }
+    textarea{min-height:110px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    button{
+      background:var(--accent);color:#fff;border:none;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer;
+    }
+    button.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+    button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+    .scorebox,.notice{padding:16px;border-radius:14px;background:#f9fbff;border:1px solid var(--line)}
+    .big{font-size:26px;font-weight:700}
+    .small{font-size:13px;color:var(--muted)}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .key{background:#f9fbff;border:1px dashed var(--line);border-radius:14px;padding:14px;margin-top:12px}
+    .hidden{display:none}
+    ul{margin:8px 0 8px 18px}
+    .audio-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+    .audio-status{font-size:14px;color:var(--muted)}
+    .official-note{font-size:14px;color:var(--muted);margin-top:6px}
+  </style>
 </head>
 <body>
-<header class="site-header">
-    <div class="container header-inner">
-        <div class="logo">
-            <a href="index.html">Infoflare</a>
-        </div>
-        <nav class="nav">
-            <a href="index.html">Home</a>
-        </nav>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Mini TOEFL iBT Practice Test</h1>
+      <p class="muted">Condensed practice format designed for approximately 15–20 minutes of work. Sections included: Reading, Listening, Speaking, and Writing.</p>
+      <div>
+        <span class="pill">Reading: 5 questions</span>
+        <span class="pill">Listening: 5 questions</span>
+        <span class="pill">Speaking: 2 tasks</span>
+        <span class="pill">Writing: 1 task</span>
+      </div>
     </div>
-</header>
 
-<main>
-    <section class="hero">
-        <div class="container hero-inner">
+    <div class="grid">
+      <div class="col-8">
+        <div class="card">
+          <div class="section-title">
             <div>
-                <h1>10-second facts that actually stick in your brain.</h1>
-                <p>Animal facts, human mind facts and space facts — short, sharp and made for scrolling.</p>
-                <div class="hero-actions">
-                    <a href="animal-facts-1.html" class="btn primary">Read animal facts</a>
-                    <button class="btn secondary" id="random-facts">Random facts page</button>
-                </div>
+              <h2>Test Instructions</h2>
+              <p class="muted">Recommended time: 18 minutes. Use the timer controls below to simulate exam conditions.</p>
             </div>
+            <div id="timer" class="timer ok">18:00</div>
+          </div>
+          <div class="btns">
+            <button onclick="startTimer()" type="button">Start</button>
+            <button class="secondary" onclick="pauseTimer()" type="button">Pause</button>
+            <button class="ghost" onclick="resetTimer()" type="button">Reset</button>
+          </div>
+          <div class="official-note">For best results, complete the test in one sitting and avoid checking the answer key before submitting your responses.</div>
         </div>
-    </section>
 
-    <section id="latest" class="section">
-        <div class="container">
-            <h2>Latest fact packs</h2>
-            <div class="stories-grid">
-                <a href="animal-facts-1.html" class="story-card">
-                    <div class="story-meta">
-                        <span class="badge">Animal facts</span>
-                        <span class="read-time">9 quick facts</span>
-                    </div>
-                    <h3>9 Animal Facts You Can Drop In Any Conversation</h3>
-                    <p>From dolphins to tigers — weird, real and memorable.</p>
-                </a>
+        <form id="testForm">
+          <div class="card">
+            <h2>Section 1 — Reading</h2>
+            <p><b>Passage:</b> Many students believe that talent is the main reason for success in school. However, research suggests that consistent effort, good study habits, and feedback from teachers often matter more than natural ability. Students who review material regularly and correct their mistakes tend to improve faster over time. This means that success is usually built step by step, rather than appearing instantly.</p>
 
-                <a href="human-facts-1.html" class="story-card">
-                    <div class="story-meta">
-                        <span class="badge badge-blue">Human &amp; brain</span>
-                        <span class="read-time">7 quick facts</span>
-                    </div>
-                    <h3>7 Human Brain Facts That Feel Fake (But Aren't)</h3>
-                    <p>Why your brain lies to you every single day.</p>
-                </a>
-
-                <a href="space-facts-1.html" class="story-card">
-                    <div class="story-meta">
-                        <span class="badge badge-purple">Space</span>
-                        <span class="read-time">8 quick facts</span>
-                    </div>
-                    <h3>8 Space Facts That Make Earth Look Tiny</h3>
-                    <p>Distances your brain literally can’t imagine.</p>
-                </a>
-
-                <a href="weird-facts-1.html" class="story-card">
-                    <div class="story-meta">
-                        <span class="badge badge-orange">Weird &amp; random</span>
-                        <span class="read-time">10 quick facts</span>
-                    </div>
-                    <h3>10 Weird Facts That Sound Made Up</h3>
-                    <p>Random, strange and oddly satisfying to know.</p>
-                </a>
+            <div class="q">
+              <h3>1. What is the main idea of the passage?</h3>
+              <label><input type="radio" name="q1" value="A">A) Natural talent is the only important factor in learning.</label>
+              <label><input type="radio" name="q1" value="B">B) Success usually comes from steady effort and correction.</label>
+              <label><input type="radio" name="q1" value="C">C) Teachers are less important than textbooks.</label>
+              <label><input type="radio" name="q1" value="D">D) Students should avoid making mistakes.</label>
             </div>
-        </div>
-    </section>
 
-    <section id="categories" class="section section-soft">
-        <div class="container">
-            <h2>Categories</h2>
-            <div class="categories-grid">
-                <a href="animal-facts-1.html" class="category-card">Animal facts</a>
-                <a href="human-facts-1.html" class="category-card">Human &amp; brain facts</a>
-                <a href="space-facts-1.html" class="category-card">Space &amp; universe facts</a>
-                <a href="weird-facts-1.html" class="category-card">Weird &amp; random facts</a>
+            <div class="q">
+              <h3>2. According to the passage, what helps students improve faster?</h3>
+              <label><input type="radio" name="q2" value="A">A) Studying only before exams</label>
+              <label><input type="radio" name="q2" value="B">B) Having natural intelligence only</label>
+              <label><input type="radio" name="q2" value="C">C) Reviewing material and correcting mistakes</label>
+              <label><input type="radio" name="q2" value="D">D) Ignoring teacher feedback</label>
             </div>
-        </div>
-    </section>
-</main>
 
-<footer class="site-footer">
-    <div class="container footer-inner">
-        <p>© <span id="year"></span> Infoflare. All rights reserved.</p>
+            <div class="q">
+              <h3>3. The word <i>consistent</i> is closest in meaning to:</h3>
+              <label><input type="radio" name="q3" value="A">A) regular</label>
+              <label><input type="radio" name="q3" value="B">B) random</label>
+              <label><input type="radio" name="q3" value="C">C) quick</label>
+              <label><input type="radio" name="q3" value="D">D) weak</label>
+            </div>
+
+            <div class="q">
+              <h3>4. What does the passage suggest about mistakes?</h3>
+              <label><input type="radio" name="q4" value="A">A) They should be hidden.</label>
+              <label><input type="radio" name="q4" value="B">B) They slow progress permanently.</label>
+              <label><input type="radio" name="q4" value="C">C) They can be useful for learning.</label>
+              <label><input type="radio" name="q4" value="D">D) Only talented students make them.</label>
+            </div>
+
+            <div class="q">
+              <h3>5. Which statement would the author most likely agree with?</h3>
+              <label><input type="radio" name="q5" value="A">A) Success appears instantly for most people.</label>
+              <label><input type="radio" name="q5" value="B">B) Good habits can be more important than talent.</label>
+              <label><input type="radio" name="q5" value="C">C) Feedback is usually useless.</label>
+              <label><input type="radio" name="q5" value="D">D) Only school grades matter.</label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Section 2 — Listening</h2>
+            <div class="notice">
+              <p><b>Directions:</b> Click <b>Play Audio</b> to hear the conversation. Answer the questions based on what you hear. You may replay the audio if needed.</p>
+              <div class="audio-bar">
+                <button type="button" onclick="playListeningAudio()">Play Audio</button>
+                <button type="button" class="secondary" onclick="stopListeningAudio()">Stop Audio</button>
+                <button type="button" class="ghost" onclick="toggleTranscript()">Show / Hide Transcript</button>
+              </div>
+              <div id="audioStatus" class="audio-status">Audio ready.</div>
+              <div id="transcriptBox" class="key hidden">
+                <h3>Transcript</h3>
+                <p>Student: Hi, Professor. I missed yesterday’s class because I was sick. Did I miss anything important?</p>
+                <p>Professor: We discussed the outline for the research project. You’ll need to choose a topic by Friday.</p>
+                <p>Student: Oh, I see. Can I still talk to you about possible topics tomorrow?</p>
+                <p>Professor: Of course. Come during office hours at 2 p.m. and bring two or three ideas.</p>
+                <p>Student: Great, thank you. I’ll do that.</p>
+              </div>
+            </div>
+
+            <div class="q">
+              <h3>6. Why did the student miss class?</h3>
+              <label><input type="radio" name="q6" value="A">A) He forgot about it</label>
+              <label><input type="radio" name="q6" value="B">B) He was sick</label>
+              <label><input type="radio" name="q6" value="C">C) He was traveling</label>
+              <label><input type="radio" name="q6" value="D">D) He had another exam</label>
+            </div>
+
+            <div class="q">
+              <h3>7. What was discussed in class?</h3>
+              <label><input type="radio" name="q7" value="A">A) Final exam dates</label>
+              <label><input type="radio" name="q7" value="B">B) A new textbook</label>
+              <label><input type="radio" name="q7" value="C">C) The research project outline</label>
+              <label><input type="radio" name="q7" value="D">D) A field trip</label>
+            </div>
+
+            <div class="q">
+              <h3>8. What must the student do by Friday?</h3>
+              <label><input type="radio" name="q8" value="A">A) Submit the whole project</label>
+              <label><input type="radio" name="q8" value="B">B) Choose a topic</label>
+              <label><input type="radio" name="q8" value="C">C) Meet another student</label>
+              <label><input type="radio" name="q8" value="D">D) Miss office hours</label>
+            </div>
+
+            <div class="q">
+              <h3>9. When should the student meet the professor?</h3>
+              <label><input type="radio" name="q9" value="A">A) Tomorrow at 2 p.m.</label>
+              <label><input type="radio" name="q9" value="B">B) Friday at noon</label>
+              <label><input type="radio" name="q9" value="C">C) Today at 2 p.m.</label>
+              <label><input type="radio" name="q9" value="D">D) Next week</label>
+            </div>
+
+            <div class="q">
+              <h3>10. What does the professor ask the student to bring?</h3>
+              <label><input type="radio" name="q10" value="A">A) His homework</label>
+              <label><input type="radio" name="q10" value="B">B) A doctor’s note</label>
+              <label><input type="radio" name="q10" value="C">C) Two or three topic ideas</label>
+              <label><input type="radio" name="q10" value="D">D) A completed project</label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Section 3 — Speaking</h2>
+            <p class="muted">Speak your answer aloud. You may use the text boxes only to note brief ideas before responding.</p>
+
+            <div class="q">
+              <h3>11. Independent Speaking (45 seconds)</h3>
+              <p>Do you prefer studying alone or studying with other people? Explain your answer and give reasons.</p>
+              <textarea name="speaking1" placeholder="Optional notes..."></textarea>
+            </div>
+
+            <div class="q">
+              <h3>12. Campus Situation Speaking (45 seconds)</h3>
+              <p>A school plans to start classes 30 minutes later in the morning. Do you think this is a good idea? Why or why not?</p>
+              <textarea name="speaking2" placeholder="Optional notes..."></textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Section 4 — Writing</h2>
+            <div class="q">
+              <h3>13. Writing Task (5–7 minutes)</h3>
+              <p>Some people think teenagers should spend less time on social media. Others believe social media can be useful for learning and communication. Write a short response of approximately 100–150 words explaining your opinion.</p>
+              <textarea name="writing" id="writing" placeholder="Write your response here..."></textarea>
+              <div class="small">Word count: <span id="wordCount">0</span></div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="col-4">
+        <div class="card">
+          <h2>Scoring</h2>
+          <div class="scorebox">
+            <div>Objective score: <span id="objScore" class="big">0/10</span></div>
+            <div class="small">Reading + Listening</div>
+          </div>
+          <div class="scorebox" style="margin-top:12px">
+            <div>Estimated TOEFL range: <span id="estScore" class="big">—</span></div>
+            <div class="small">Speaking and Writing require human scoring for a more reliable estimate.</div>
+          </div>
+          <div class="btns">
+            <button type="button" onclick="gradeTest()">Submit and Score</button>
+            <button type="button" class="secondary" onclick="toggleKey()">Show Answer Key</button>
+          </div>
+          <div id="feedback" class="key hidden"></div>
+          <div id="answerKey" class="key hidden">
+            <h3>Answer Key</h3>
+            <p><b>Reading:</b> 1-B, 2-C, 3-A, 4-C, 5-B</p>
+            <p><b>Listening:</b> 6-B, 7-C, 8-B, 9-A, 10-C</p>
+            <h3>Speaking Rubric (0–4 per task)</h3>
+            <ul>
+              <li><b>4</b> — clear, organized, relevant, and mostly accurate language use</li>
+              <li><b>3</b> — generally effective, but with noticeable weaknesses</li>
+              <li><b>2</b> — limited development, frequent language problems</li>
+              <li><b>1</b> — very weak or incomplete response</li>
+              <li><b>0</b> — no response or unrelated response</li>
+            </ul>
+            <h3>Writing Rubric (0–5)</h3>
+            <ul>
+              <li><b>5</b> — well organized, clear opinion, effective support, strong language control</li>
+              <li><b>4</b> — good response with some noticeable language or organization issues</li>
+              <li><b>3</b> — adequate meaning, but weak structure or frequent errors</li>
+              <li><b>2</b> — limited development and substantial language problems</li>
+              <li><b>1–0</b> — minimal, unclear, or missing response</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Score Interpretation</h2>
+          <p class="muted">The automatic score is based only on the 10 objective questions. The total range below is an estimate, not an official TOEFL result.</p>
+          <ul>
+            <li>9–10 / 10 → approximately <b>90–110+</b> with solid Speaking and Writing</li>
+            <li>7–8 / 10 → approximately <b>75–95</b></li>
+            <li>5–6 / 10 → approximately <b>55–75</b></li>
+            <li>0–4 / 10 → approximately <b>30–55</b></li>
+          </ul>
+        </div>
+      </div>
     </div>
-</footer>
+  </div>
 
-<script src="script.js"></script>
+  <script>
+    const answers = {
+      q1:'B', q2:'C', q3:'A', q4:'C', q5:'B',
+      q6:'B', q7:'C', q8:'B', q9:'A', q10:'C'
+    };
+
+    let totalSeconds = 18 * 60;
+    let timer = null;
+    let currentUtterance = null;
+
+    const listeningText = [
+      "Student: Hi, Professor. I missed yesterday's class because I was sick. Did I miss anything important?",
+      "Professor: We discussed the outline for the research project. You'll need to choose a topic by Friday.",
+      "Student: Oh, I see. Can I still talk to you about possible topics tomorrow?",
+      "Professor: Of course. Come during office hours at 2 P M and bring two or three ideas.",
+      "Student: Great, thank you. I'll do that."
+    ].join(' ');
+
+    function renderTimer(){
+      const el = document.getElementById('timer');
+      const m = String(Math.floor(totalSeconds / 60)).padStart(2,'0');
+      const s = String(totalSeconds % 60).padStart(2,'0');
+      el.textContent = `${m}:${s}`;
+      el.className = 'timer ' + (totalSeconds > 600 ? 'ok' : totalSeconds > 180 ? 'warn' : 'bad');
+    }
+
+    function startTimer(){
+      if (timer) return;
+      timer = setInterval(() => {
+        if (totalSeconds > 0){
+          totalSeconds--; renderTimer();
+        } else {
+          clearInterval(timer); timer = null;
+          alert('Time is up.');
+        }
+      },1000);
+    }
+
+    function pauseTimer(){
+      clearInterval(timer); timer = null;
+    }
+
+    function resetTimer(){
+      pauseTimer();
+      totalSeconds = 18 * 60;
+      renderTimer();
+    }
+
+    function gradeTest(){
+      let score = 0;
+      const missed = [];
+      for (const [q, correct] of Object.entries(answers)){
+        const checked = document.querySelector(`input[name="${q}"]:checked`);
+        if (checked && checked.value === correct) score++;
+        else missed.push(q.replace('q',''));
+      }
+      document.getElementById('objScore').textContent = `${score}/10`;
+
+      let range = '';
+      if (score >= 9) range = '90–110+';
+      else if (score >= 7) range = '75–95';
+      else if (score >= 5) range = '55–75';
+      else range = '30–55';
+      document.getElementById('estScore').textContent = range;
+
+      const wc = getWordCount(document.getElementById('writing').value);
+      const feedback = document.getElementById('feedback');
+      feedback.classList.remove('hidden');
+      feedback.innerHTML = `
+        <h3>Result Summary</h3>
+        <p><b>Correct answers:</b> ${score} out of 10</p>
+        <p><b>Incorrect or unanswered items:</b> ${missed.length ? missed.join(', ') : 'None'}</p>
+        <p><b>Writing word count:</b> ${wc}</p>
+        <p class="muted">A reliable Speaking and Writing score requires human evaluation of content, organization, grammar, vocabulary, and delivery.</p>
+      `;
+    }
+
+    function toggleKey(){
+      document.getElementById('answerKey').classList.toggle('hidden');
+    }
+
+    function toggleTranscript(){
+      document.getElementById('transcriptBox').classList.toggle('hidden');
+    }
+
+    function getWordCount(text){
+      return (text.trim().match(/\S+/g) || []).length;
+    }
+
+    function playListeningAudio(){
+      const status = document.getElementById('audioStatus');
+      if (!('speechSynthesis' in window)) {
+        status.textContent = 'Speech playback is not supported in this browser.';
+        return;
+      }
+      stopListeningAudio();
+      currentUtterance = new SpeechSynthesisUtterance(listeningText);
+      currentUtterance.lang = 'en-US';
+      currentUtterance.rate = 0.92;
+      currentUtterance.pitch = 1;
+      currentUtterance.onstart = () => status.textContent = 'Playing audio...';
+      currentUtterance.onend = () => status.textContent = 'Audio finished.';
+      currentUtterance.onerror = () => status.textContent = 'Audio playback error.';
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => /en-US|English/i.test(v.lang + ' ' + v.name));
+      if (preferred) currentUtterance.voice = preferred;
+      window.speechSynthesis.speak(currentUtterance);
+    }
+
+    function stopListeningAudio(){
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      document.getElementById('audioStatus').textContent = 'Audio stopped.';
+    }
+
+    document.getElementById('writing').addEventListener('input', (e) => {
+      document.getElementById('wordCount').textContent = getWordCount(e.target.value);
+    });
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {};
+      window.speechSynthesis.getVoices();
+    }
+
+    renderTimer();
+  </script>
 </body>
 </html>
