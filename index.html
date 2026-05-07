@@ -147,6 +147,10 @@
       font-size: 15px;
       font-weight: 700;
       line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     button:hover, .button-link:hover {
@@ -164,6 +168,7 @@
       color: var(--text);
       border: 1px solid var(--line);
     }
+
 
     .meta-note {
       font-size: 13px;
@@ -228,6 +233,7 @@
       font-size: 15px;
       font-weight: 600;
       line-height: 1.35;
+      justify-content: flex-start;
     }
 
     .answer.correct {
@@ -323,14 +329,12 @@
       color: #8da0c5;
     }
 
-    .hidden { display: none !important; }
-
     @media (max-width: 640px) {
       body { padding: 12px; }
       .hero, .section { padding: 20px; }
       .stats, .result-grid { grid-template-columns: 1fr; }
       .quiz-top { align-items: flex-start; flex-direction: column; }
-      button, .button-link { width: 100%; justify-content: center; }
+      button, .button-link { width: 100%; }
     }
   </style>
 </head>
@@ -351,12 +355,16 @@
             <strong>30–45s</strong>
             <p>average completion time</p>
           </div>
-   
+          <div class="stat">
+            <strong>Bonus</strong>
+            <p>unlocks after quiz</p>
+          </div>
         </div>
 
         <div class="buttons">
           <button id="startBtn" class="primary">Start the Quiz</button>
         </div>
+        <p class="meta-note">Complete the quiz to unlock the bonus page.</p>
       </section>
 
       <section id="quiz" class="section quiz-wrap">
@@ -390,13 +398,11 @@
         </div>
 
         <div class="callout">
-          <p>
-            Finished the quiz? Open the bonus page below to continue.
-          </p>
+          <p id="bonusText">Finished the quiz? Open the bonus page below to continue.</p>
         </div>
 
         <div class="buttons">
-          <a id="nextChallengeBtn" class="button-link primary" href="https://singingfiles.com/show.php?l=0&u=2515820&id=73210" target="_blank" rel="noopener noreferrer">Open Bonus Page</a>
+          <a id="nextChallengeBtn" class="button-link primary" href="#" target="_blank" rel="noopener noreferrer">Continue</a>
           <button id="retryBtn" class="secondary">Try Again</button>
         </div>
       </section>
@@ -404,6 +410,72 @@
   </div>
 
   <script>
+    const OFFER_MAP = {
+      US: {
+        label: 'USA',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74764',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74763',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74836'
+      },
+      AU: {
+        label: 'Australia',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=69890',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=69889',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=69888'
+      },
+      GB: {
+        label: 'United Kingdom',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=73788',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=71857',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=71856'
+      },
+      CA: {
+        label: 'Canada',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=69667',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74775',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=69665'
+      },
+      PH: {
+        label: 'Philippines',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74097',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74096',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74257'
+      },
+      ZA: {
+        label: 'South Africa',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=63317',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70084',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70083'
+      },
+      NG: {
+        label: 'Nigeria',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70076',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70075',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=63318',
+        fallback: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70074'
+      },
+      DE: {
+        label: 'Germany',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74202',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74183',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74715'
+      },
+      IN: {
+        label: 'India',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=74726',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70069',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=73947'
+      },
+      BR: {
+        label: 'Brazil',
+        ios: 'https://singingfiles.com/show.php?l=0&u=2515820&id=70079',
+        android: 'https://singingfiles.com/show.php?l=0&u=2515820&id=72663',
+        desktop: 'https://singingfiles.com/show.php?l=0&u=2515820&id=65472'
+      }
+    };
+
+    const DEFAULT_COUNTRY = 'US';
+
     const questions = [
       {
         question: 'Which mammal is the only one truly capable of sustained flight?',
@@ -454,7 +526,6 @@
     const result = document.getElementById('result');
 
     const startBtn = document.getElementById('startBtn');
-    
     const questionCount = document.getElementById('questionCount');
     const progressBar = document.getElementById('progressBar');
     const questionText = document.getElementById('questionText');
@@ -466,10 +537,87 @@
     const performanceLabel = document.getElementById('performanceLabel');
     const nextStepLabel = document.getElementById('nextStepLabel');
     const retryBtn = document.getElementById('retryBtn');
+    const nextChallengeBtn = document.getElementById('nextChallengeBtn');
+    const bonusText = document.getElementById('bonusText');
 
     let currentIndex = 0;
     let score = 0;
     let locked = false;
+    let detectedCountry = DEFAULT_COUNTRY;
+    let detectedDevice = getDeviceType();
+    let selectedOffer = null;
+    let usedFallback = false;
+
+    function getDeviceType() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      const platform = navigator.platform || '';
+      const isIpadOS = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+      const isIOS = /iPad|iPhone|iPod/i.test(ua) || isIpadOS;
+      const isAndroid = /Android/i.test(ua);
+
+      if (isIOS) return 'ios';
+      if (isAndroid) return 'android';
+      return 'desktop';
+    }
+
+    async function detectCountry() {
+      const services = [
+        {
+          url: 'https://ipapi.co/json/',
+          parse: data => data && data.country_code
+        },
+        {
+          url: 'https://ipwho.is/',
+          parse: data => data && data.success !== false && data.country_code
+        }
+      ];
+
+      for (const service of services) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3500);
+          const response = await fetch(service.url, { signal: controller.signal });
+          clearTimeout(timeout);
+
+          if (!response.ok) continue;
+
+          const data = await response.json();
+          const code = String(service.parse(data) || '').toUpperCase();
+          if (code) return code;
+        } catch (error) {
+          // Try the next provider.
+        }
+      }
+
+      return DEFAULT_COUNTRY;
+    }
+
+    function chooseOffer(countryCode, deviceType) {
+      const countryOffers = OFFER_MAP[countryCode] || OFFER_MAP[DEFAULT_COUNTRY];
+      const offerUrl = countryOffers[deviceType] || countryOffers.desktop || countryOffers.fallback || OFFER_MAP[DEFAULT_COUNTRY].desktop;
+
+      return {
+        url: offerUrl,
+        countryLabel: countryOffers.label,
+        countryCode: OFFER_MAP[countryCode] ? countryCode : DEFAULT_COUNTRY,
+        deviceType: deviceType,
+        fallback: !OFFER_MAP[countryCode] || !countryOffers[deviceType]
+      };
+    }
+
+    function updateOfferUI() {
+      selectedOffer = chooseOffer(detectedCountry, detectedDevice);
+      usedFallback = selectedOffer.fallback;
+
+      nextChallengeBtn.href = selectedOffer.url;
+      nextChallengeBtn.dataset.offer = selectedOffer.url;
+      bonusText.textContent = 'Finished the quiz? Continue below.';
+    }
+
+    async function initOfferRouter() {
+      detectedCountry = await detectCountry();
+      updateOfferUI();
+    }
 
     function showLanding() {
       landing.style.display = 'grid';
@@ -487,12 +635,13 @@
       landing.style.display = 'none';
       quiz.style.display = 'none';
       result.style.display = 'grid';
+      updateOfferUI();
     }
 
     function renderQuestion() {
       const q = questions[currentIndex];
       questionCount.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
-      progressBar.style.width = `${((currentIndex) / questions.length) * 100}%`;
+      progressBar.style.width = `${(currentIndex / questions.length) * 100}%`;
       questionText.textContent = q.question;
       feedback.textContent = '';
       feedback.className = 'feedback';
@@ -503,12 +652,12 @@
         const btn = document.createElement('button');
         btn.className = 'answer';
         btn.textContent = answer;
-        btn.addEventListener('click', () => handleAnswer(index, btn));
+        btn.addEventListener('click', () => handleAnswer(index));
         answersEl.appendChild(btn);
       });
     }
 
-    function handleAnswer(selectedIndex, clickedButton) {
+    function handleAnswer(selectedIndex) {
       if (locked) return;
       locked = true;
 
@@ -577,13 +726,20 @@
       renderQuestion();
     }
 
-    startBtn.addEventListener('click', resetQuiz);
-    retryBtn.addEventListener('click', resetQuiz);
-    howItWorksBtn.addEventListener('click', () => {
-      howItWorksText.classList.toggle('hidden');
+    nextChallengeBtn.addEventListener('click', event => {
+      updateOfferUI();
+      if (!selectedOffer || !selectedOffer.url) {
+        event.preventDefault();
+        alert('Offer is still loading. Please try again.');
+      }
     });
 
+    startBtn.addEventListener('click', resetQuiz);
+    retryBtn.addEventListener('click', resetQuiz);
+
     showLanding();
+    updateOfferUI();
+    initOfferRouter();
   </script>
 </body>
 </html>
